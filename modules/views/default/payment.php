@@ -31,8 +31,10 @@
 		
 			</div>
 		</div>
-       <form class="form" action="/partnerpay/web/bbps/default/pay" id="payment">
+       <form class="form" action="/partnerpay/web/bbps/default/pay" id="payment" method="post">
 	   <div class="row">		
+	   <input type="hidden" name="_csrf" value="<?=Yii::$app->request->getCsrfToken()?>" />
+	   <input type="hidden" name="invoice_no" value="<?=$invoice_data[0]['INVOICE_ID'];?>" />
 			<div class="col-sm-6">
 				<div class="form-group req">
 					<div class="form-group field-client-first_name required">

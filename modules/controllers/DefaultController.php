@@ -4,6 +4,7 @@ namespace app\modules\controllers;
 
 use Yii;
 use yii\web\UploadedFile;
+use app\helpers\Checksum;
 use yii\base\Hcontroller;
 use app\modules\models\TblUtility;
 use app\modules\models\TblProvider;
@@ -14,6 +15,7 @@ use app\modules\models\TblInvoiceBillDetails;
 
 class DefaultController extends HController
 {
+  public $enableCsrfValidation = false;
 	public function actionIndex()
 	{
 		$data=Yii::$app->user->identity;
@@ -93,7 +95,7 @@ class DefaultController extends HController
       // print_r(json_encode($api_data));
       // $curl = curl_init('http://localhost/partnerpay/web/bbps/default/response');
       // curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
-      // curl_setopt($curl, CURLOPT_POST, false);
+      // curl_setopt($curl, CURLOPT_POST, true);
       // curl_setopt($ch, CURLOPT_POSTFIELDS, $api_data);
       // $curl_response = curl_exec($curl);
       // curl_close($curl); 
@@ -180,41 +182,50 @@ class DefaultController extends HController
     }
     
     public function actionResponse(){
-      $data=[
-        "Invoice_no"=> 59,
-        "private_key"=> "asdasdasdasd",
-        "checksum"=> "asdassdasdasdasd",
-        "BankResponse"=>[
-          [
-            "validationid"=> "12112114",
-            "validation_date"=> "07-02-2017 22:06:34",
-            "valid_until"=> "10-02-2017 22:06:34",
-            "billnumber"=> "9869457154",
-            "billdate"=> "02-08-2017",
-            "billduedate"=> "02-09-2017",
-            "billamount"=> "500.00",
-            "early_billduedate"=> "28-08-2017",
-            "early_billdiscount"=> "15.00",
-            "early_billamount"=> "485.00",
-            "late_payment_charges"=> "50.00",
-            "late_payment_amount"=> "550.00",
-            "net_billamount"=> "550.00"
-          ],
-          ]
-        ];
-        
-        // print_r(json_encode($data));
-        $data1 = json_encode($data);
-        $data2 = json_decode($data1);
-        $model= new TblProviderBillDetails();
-        foreach($data2->BankResponse as $value){
-          $connection = Yii::$app->db;  
-          $connection->createCommand()
-          ->update('tbl_provider_bill_details', ['ISSUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->validation_date)),'DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->billduedate)),'EARLY_DISCOUNT'=>$value->early_billdiscount,'LATE_FEE'=>$value->late_payment_charges,'EARLY_DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->early_billduedate)),'NET_AMOUNT'=>$value->net_billamount,'AMOUNT'=>$value->billamount,'REF_NO'=>$value->validationid,'RESPONSE_NOT_RECIEVED'=>0], 'MOBILE_NO='.$value->billnumber.' AND INVOICE_ID='.$data2->Invoice_no)
-          ->execute();
-          // echo "<br>";
-          print_r($value->validationid);
+      // $data=[
+      //   "Invoice_no"=> 59,
+      //   "private_key"=> "asdasdasdasd",
+      //   "checksum"=> "asdassdasdasdasd",
+      //   "BankResponse"=>[
+      //     [
+      //       "validationid"=> "12112114",
+      //       "validation_date"=> "07-02-2017 22:06:34",
+      //       "valid_until"=> "10-02-2017 22:06:34",
+      //       "billnumber"=> "9869457154",
+      //       "billdate"=> "02-08-2017",
+      //       "billduedate"=> "02-09-2017",
+      //       "billamount"=> "500.00",
+      //       "early_billduedate"=> "28-08-2017",
+      //       "early_billdiscount"=> "15.00",
+      //       "early_billamount"=> "485.00",
+      //       "late_payment_charges"=> "50.00",
+      //       "late_payment_amount"=> "550.00",
+      //       "net_billamount"=> "550.00"
+      //     ],
+      //     ]
+      //   ];
+        // $this->enableCsrfValidation = false;
+        // echo "asdads";
+        $post = Yii::$app->request->rawBody;
+        print_r($post);
+        if($post){
+          return "true";
+        } else {
+          return 'gjkhjk';
         }
+        // return true;
+        // print_r(json_encode($data));
+        /*$data1 = json_encode($data);
+        $data2 = json_decode($data1);*/
+        // $model= new TblProviderBillDetails();
+        // foreach($data2->BankResponse as $value){
+        //   $connection = Yii::$app->db;  
+        //   $connection->createCommand()
+        //   ->update('tbl_provider_bill_details', ['ISSUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->validation_date)),'DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->billduedate)),'EARLY_DISCOUNT'=>$value->early_billdiscount,'LATE_FEE'=>$value->late_payment_charges,'EARLY_DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->early_billduedate)),'NET_AMOUNT'=>$value->net_billamount,'AMOUNT'=>$value->billamount,'REF_NO'=>$value->validationid,'RESPONSE_NOT_RECIEVED'=>0], 'MOBILE_NO='.$value->billnumber.' AND INVOICE_ID='.$data2->Invoice_no)
+        //   ->execute();
+          // echo "<br>";
+        //   print_r($value->validationid);
+        // }
       }
       
       public function actionListing($invoice_id){
@@ -297,8 +308,13 @@ class DefaultController extends HController
       }
       
       public function actionPay(){
-        echo '<pre>';
-        print_r(Yii::$app->request->post());
+        $data=Yii::$app->user->identity;
+        $chk = new Checksum();
+        $privatekey = $chk->encrypt($data['EMAIL'].":|:".$data['PASSWORD'], "12345");
+        
+        $checksum = $chk->calculateChecksum($data['MERCHANT_ID'].Yii::$app->request->post('invoice_no')."356.00".$data['EMAIL']."9869478152".$data['FIRST_NAME'].$data['LAST_NAME']."356"."INR".date('Y-m-d'),$privatekey);
+        
+        return $this->render('airpay_payment',array('payment_data'=>Yii::$app->request->post(),"key"=>$key,"checksum"=>$checksum));
       }
     }      
     
