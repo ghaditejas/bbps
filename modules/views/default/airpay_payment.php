@@ -13,10 +13,10 @@
 		    <td align="center" valign="middle">
             <?php $data=Yii::$app->user->identity;
                 ?>
-			    <form action="	https://payments.airpay.co.in/pay/index.php" method="post" id="airpay_form">
+			    <form action="https://payments.airpay.co.in/pay/index.php" method="post" id="airpay_form">
                     <input type="hidden" name="privatekey" value="<?php echo $key; ?>">
-                    <input type="hidden" name="mercid" value="<?php echo $data['MERCHANT_ID']; ?>">
-				    <input type="hidden" name="orderid" value="<?php echo $airpay_payment['invoice_no']; ?>">
+                    <input type="hidden" name="mercid" value="<?php echo $mechant_id; ?>">
+				    <input type="hidden" name="orderid" value="<?php echo $payment_data['invoice_no']; ?>">
                     <input type="hidden" name="amount" value="356.00">
                     <input type="hidden" name="buyerEmail" value="<?php echo $data['EMAIL']; ?>">
                     <input type="hidden" name="buyerPhone" value="9869478152">
@@ -24,8 +24,8 @@
                     <input type="hidden" name="buyerLastName" value="<?php echo $data['LAST_NAME']; ?>">
  		            <input type="hidden" name="currency" value="356">
 		            <input type="hidden" name="isocurrency" value="INR">
-                    <input type="hidden" name="checksum" value="<?= $checksum; ?>">
-				    <input type="hidden" name="chmod" value="">	
+                    <input type="hidden" name="checksum" value="<?php echo $checksum; ?>">
+				    <input type="hidden" name="chmod" value= "">	
                 </form>
 		    </td>
         </tr>

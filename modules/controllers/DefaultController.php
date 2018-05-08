@@ -93,7 +93,8 @@ class DefaultController extends HController
       ];
       // echo "<pre>";
       // print_r(json_encode($api_data));
-      // $curl = curl_init('http://localhost/partnerpay/web/bbps/default/response');
+      // $curl = curl_init('https://devel-payments.airpayme.com/bbps/bulk_process_invoice.php');
+      // curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
       // curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
       // curl_setopt($curl, CURLOPT_POST, true);
       // curl_setopt($ch, CURLOPT_POSTFIELDS, $api_data);
@@ -207,11 +208,11 @@ class DefaultController extends HController
         // $this->enableCsrfValidation = false;
         // echo "asdads";
         $post = Yii::$app->request->rawBody;
-        print_r($post);
+        // print_r($post);
         if($post){
-          return "true";
+         return Yii::$app->response->statusCode = 200;
         } else {
-          return 'gjkhjk';
+         return Yii::$app->response->statusCode = 401;
         }
         // return true;
         // print_r(json_encode($data));
@@ -309,12 +310,41 @@ class DefaultController extends HController
       
       public function actionPay(){
         $data=Yii::$app->user->identity;
+        $connection = Yii::$app->db;
+        $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+        $config = $connection
+          ->createCommand($query);
+          $config->bindValue(':partner_id',$data['PARTNER_ID']);
+          $config_data = $config->queryAll();
         $chk = new Checksum();
-        $privatekey = $chk->encrypt($data['EMAIL'].":|:".$data['PASSWORD'], "12345");
+        // $privatekey = $chk->encrypt("5610027:|:A3IEpPKn", "5q9M2W1uKe67B3Ab");
+        $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+        $buyerEmail = trim($data['EMAIL']);
+	      $buyerPhone = trim("9869478152");
+	      $buyerFirstName = trim($data['FIRST_NAME']);
+	      $buyerLastName = trim($data['LAST_NAME']);
+	      $amount = trim("356.00");
+        $orderid = trim(Yii::$app->request->post('invoice_no'));
+        $alldata   = $buyerEmail.$buyerFirstName.$buyerLastName.$amount.$orderid;
+        $checksum = $chk->calculateChecksum($alldata.date('Y-m-d'),$privatekey);
         
-        $checksum = $chk->calculateChecksum($data['MERCHANT_ID'].Yii::$app->request->post('invoice_no')."356.00".$data['EMAIL']."9869478152".$data['FIRST_NAME'].$data['LAST_NAME']."356"."INR".date('Y-m-d'),$privatekey);
-        
-        return $this->render('airpay_payment',array('payment_data'=>Yii::$app->request->post(),"key"=>$key,"checksum"=>$checksum));
+        return $this->render('airpay_payment',array('payment_data'=>Yii::$app->request->post(),"key"=>$privatekey,"checksum"=>$checksum,"mechant_id"=>$config_data[0]['AIRPAY_MERCHANT_ID']));
+      }
+
+      public function actionPaymentresponse(){
+        echo "PAYMENT DONE";
+        echo "<pre>";
+        if($_POST['TRANSACTIONPAYMENTSTATUS']=='SUCCESS'){
+          $connection = Yii::$app->db;
+          $invoice = $connection
+                  ->createCommand("Select b.NET_AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.ISSUE_DATE,b.INVOICE_ID,b.DUE_DATE,b.EARLY_DUE_DATE,b.EARLY_DISCOUNT,b.LATE_FEE,b.MOBILE_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
+          $invoice->bindValue(':invoice_id', $_POST['TRANSACTIONID']);
+         $invoice_data = $invoice->queryAll();
+         print_r($invoice_data);
+        }else{
+          return $this->render('error'); 
+        }
+
       }
     }      
     
