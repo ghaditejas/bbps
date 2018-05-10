@@ -49,13 +49,13 @@
 						<!-- <td>23-03-2018</td>
 						<td>31-03-2018</td> -->
 						<td class="text-right" id="amount_<?=$data['INVOICE_ID']?>"><?php if($data['invoice_amount']==0){?>
-                            <i class="fa fa-circle-o-notch fa-spin" style="font-size:24px"></i>
+                            -
                        <?php }else{echo $data['invoice_amount'];}?></td>
 						<td class="action">
 							<div class="bbox">
                             <?php if($data['PAYMENT_STATUS']=='success'){?>
                                 <a href="javascript:void(0)" id="<?php echo $data['INVOICE_ID'];?>" class="btn btn-primary col col-md-3" >PAID</a>
-                            <?php } else if($data['PAYMENT_STATUS']=='pending' && $data['recieved']==0){ ?>
+                            <?php } else if($data['recieved']==0){ ?>
                                 <a href="/partnerpay/web/bbps/default/payment?invoice_id=<?php echo $data['INVOICE_ID']; ?>" id="<?php echo $data['INVOICE_ID'];?>" class="btn btn-primary col col-md-3">Pay Now</a>
                            <?php } else { ?>
                                 <a class="btn btn-primary col col-md-3" id="<?php echo $data['INVOICE_ID'];?>" disabled="true">Pay Now</a>
@@ -163,11 +163,12 @@
 		</div><!-- .tab-content close -->
 	</div><!-- .tab-content close -->	
 
-<script type="text/javascript" src="/partnerpay/modules/resources/js/jquery.js"></script>
+<script type="text/javascript" src="/partnerpay/modules/resources/js/jquery.js"></script>  
 <script type="text/javascript" src="/partnerpay/modules/resources/js/bootstrap.file-input.js"></script>
 
 <script>
     function fetchdata(invoice_id,csrf_token){
+		if(invoice_id){
             $.ajax({
 					type: "POST",
       				url: "/partnerpay/web/bbps/default/checking",
@@ -182,6 +183,7 @@
 							}
 	  					}
             		 });
+			}
         }
 
 
