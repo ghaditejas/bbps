@@ -55,6 +55,9 @@ class DefaultController extends HController
 			if($_FILES['bulk_upload']['tmp_name']){
 				$uploadedFile_data = $this->upload();
 				if($uploadedFile_data){
+          if(Yii::$app->request->post('register')){
+            $ref_no=$this->archieve_data();
+          }
           $invoice_id = $this->invoice_create();
           $bill_details=array();
           $data=array();
@@ -84,6 +87,9 @@ class DefaultController extends HController
         //   echo $error;
         // }
         // exit;
+        if(Yii::$app->request->post('register')){
+          $ref_no=$this->archieve_data();
+        }
         $invoice_id = $this->invoice_create();
         $bill_details['account_id']=Yii::$app->request->post('mobile_no');
         $bill_details['fname']=Yii::$app->request->post('fname');
@@ -158,6 +164,36 @@ class DefaultController extends HController
         }
       }
       
+    }
+    
+    public function archieve_data(){
+      $data=Yii::$app->user->identity;
+      $connection = Yii::$app->db;
+      $query1="SELECT * FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register";
+      $registered = $connection
+      ->createCommand($query1);
+      $registered->bindValue(':user_id',$data['USER_ID']);
+      $registered->bindValue(':is_register','y');
+      $registered_data = $registered->queryAll();
+      if(sizeof($registered_data)){
+        $query="INSERT into tbl_archived_provider_bill_details SELECT * FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register";
+        $archieve = $connection
+        ->createCommand($query);
+        $archieve->bindValue(':user_id',$data['USER_ID']);
+        $archieve->bindValue(':is_register','y');
+        $archieve_data = $archieve->execute();
+        if($archieve_data){
+          $query2="DELETE FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register";
+          $registered = $connection
+          ->createCommand($query2);
+          $registered->bindValue(':user_id',$data['USER_ID']);
+          $registered->bindValue(':is_register','y');
+          $registered_data = $registered->execute();
+        }
+        return $registered_data[0]['REF_NO'];
+      } else{
+        return "";
+      }
     }
     
     public function invoice_create(){
@@ -329,7 +365,7 @@ class DefaultController extends HController
             public function actionRemoved(){
               $data=Yii::$app->user->identity;
               $connection = Yii::$app->db;
-              $query="SELECT b.NET_AMOUNT,b.PROVIDER_ID,p.provider_name,DATE_FORMAT(b.ISSUE_DATE,'%d/%m/%Y') as ISSUE_DATE,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.EARLY_DUE_DATE,b.EARLY_DISCOUNT,b.LATE_FEE,b.MOBILE_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.UTILITY_ID=:utility_id AND b.REMOVED='y' AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id";
+              $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.NET_AMOUNT,b.PROVIDER_ID,p.provider_name,DATE_FORMAT(b.ISSUE_DATE,'%d/%m/%Y') as ISSUE_DATE,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.EARLY_DUE_DATE,b.EARLY_DISCOUNT,b.LATE_FEE,b.MOBILE_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.UTILITY_ID=:utility_id AND b.REMOVED='y' AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id";
               $removed = $connection->createCommand($query);
               $removed->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
               $removed->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
@@ -440,6 +476,17 @@ class DefaultController extends HController
                   return Yii::$app->response->statusCode = 200;
                 }
               }
+            }
+            
+            public function actionAddmobile(){
+              $invoice_id = $this->invoice_create();
+              // foreach(Yii::$app->request->post('provider_bill_details_id')as $value){
+                $connection = Yii::$app->db;  
+                $connection->createCommand()
+                ->update('tbl_provider_bill_details', ['INVOICE_ID'=>$invoice_id,'REMOVED'=>'n'], 'PROVIDER_BILL_DETAILS_ID='.Yii::$app->request->post('provider_bill_details_id'))
+                ->execute();
+              // }
+              echo $invoice_id;
             }
           }      
           

@@ -119,7 +119,7 @@
 			<thead>
 			<tr>
 				<th class="text-center idnum">#</th>
-				<th class="text-center idnum">Select all</th>
+				<th class="text-center idnum"><input type="checkbox" id="select_all" class="checkbox-inline">Select all</th>
 				<th class="text-center">Mobile Number</th>
 				<th class="text-center">Issue Date</th>
 				<th class="text-center">Due Date</th>
@@ -202,6 +202,9 @@
         "ordering": false,
         "lengthMenu": [2, 5, 10, 25, 50, 75, 100],
      });
+	 $('#select_all').click(function(){
+		 $('.checkbox').prop('checked',$(this).prop('checked'));
+	 });
 	 var invoice_id= <?php echo $invoice_id?>;
 	 var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
 	 setInterval(fetchdata(invoice_id,csrf_token),5000);	
@@ -246,17 +249,32 @@ function getRecords(){
 				  $('#removed').removeClass('hidden');
 				  $('#removed_data tbody').empty();
 				$.each(data, function (key, value) {
+					console.log(value);
                     var remove_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td>'+
-						'<td><input type="checkbox" class="checkbox-inline"></td>'+
+						'<td><input type="checkbox" name="checkbox_bill[]" class="checkbox" value="'+value.PROVIDER_BILL_DETAILS_ID+'" class="checkbox-inline"></td>'+
 						'<td>'+value.MOBILE_NO+'</td>'+
 						'<td>'+value.ISSUE_DATE+'</td>'+
 						'<td>'+value.DUE_DATE+'</td>'+
 						'<td class="text-right">'+value.NET_AMOUNT+'</td>'+
-						'<td><a href="/partnerpay/web/bbps/default/payment?invoice_id='+value.INVOICE_ID+'" class="btn btn-primary">Pay Now</a></td></tr>';;
+						'<td><a href="javascript:void(0)" onClick="pay('+value.PROVIDER_BILL_DETAILS_ID+')" class="btn btn-primary">Pay Now</a></td></tr>';;
                     $('#removed_data tbody').append(remove_data);
              	});
 			}
    		})
+}
+</script>
+<script>
+function pay(provider_bill_details_id){
+	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
+	$.ajax({
+      		url: "/partnerpay/web/bbps/default/addmobile",  
+      		data: {"provider_bill_details_id":provider_bill_details_id,"_csrf":csrf_token},
+     		type: "POST",
+      		dataType: "json",
+      		success: function(data) {
+				window.location.href = '/partnerpay/web/bbps/default/payment?invoice_id='+data;
+			}
+   		});
 }
 </script>
 </div>
