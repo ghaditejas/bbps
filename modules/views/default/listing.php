@@ -115,6 +115,7 @@
 			<div class="remover-table hidden" id="removed">	
 			<div class="tablebox">	
 			<div class="table-responsive">
+			<!-- <input type="button" class="btn btn-primary" value="Pay Selected" style=""> -->
 			<table class="table table-striped table-bordered text-center" id="removed_data">
 			<thead>
 			<tr>
@@ -205,6 +206,12 @@
 	 $('#select_all').click(function(){
 		 $('.checkbox').prop('checked',$(this).prop('checked'));
 	 });
+	 $('body').on('click', 'input.checkbox:checkbox', function() {
+		 console.log('asd');
+		if (!this.checked) {
+            $("#select_all").prop('checked', false);
+         }
+	});
 	 var invoice_id= <?php echo $invoice_id?>;
 	 var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
 	 setInterval(fetchdata(invoice_id,csrf_token),5000);	
@@ -249,14 +256,13 @@ function getRecords(){
 				  $('#removed').removeClass('hidden');
 				  $('#removed_data tbody').empty();
 				$.each(data, function (key, value) {
-					console.log(value);
                     var remove_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td>'+
 						'<td><input type="checkbox" name="checkbox_bill[]" class="checkbox" value="'+value.PROVIDER_BILL_DETAILS_ID+'" class="checkbox-inline"></td>'+
 						'<td>'+value.MOBILE_NO+'</td>'+
 						'<td>'+value.ISSUE_DATE+'</td>'+
 						'<td>'+value.DUE_DATE+'</td>'+
 						'<td class="text-right">'+value.NET_AMOUNT+'</td>'+
-						'<td><a href="javascript:void(0)" onClick="pay('+value.PROVIDER_BILL_DETAILS_ID+')" class="btn btn-primary">Pay Now</a></td></tr>';;
+						'<td><a href="javascript:void(0)" onClick="pay()" class="btn btn-primary">Pay Now</a></td></tr>';
                     $('#removed_data tbody').append(remove_data);
              	});
 			}
@@ -264,17 +270,25 @@ function getRecords(){
 }
 </script>
 <script>
-function pay(provider_bill_details_id){
+function pay(){
 	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
-	$.ajax({
-      		url: "/partnerpay/web/bbps/default/addmobile",  
-      		data: {"provider_bill_details_id":provider_bill_details_id,"_csrf":csrf_token},
-     		type: "POST",
-      		dataType: "json",
-      		success: function(data) {
-				window.location.href = '/partnerpay/web/bbps/default/payment?invoice_id='+data;
-			}
-   		});
+	var arr = [];
+        $('input.checkbox:checkbox:checked').each(function () {
+            arr.push($(this).val());
+        });
+		if(arr.length>0){
+			$.ajax({
+      			url: "/partnerpay/web/bbps/default/add_mobile",  
+      			data: {"provider_bill_details_id":arr,"_csrf":csrf_token},
+     			type: "POST",
+      			dataType: "json",
+      			success: function(data) {
+					window.location.href = '/partnerpay/web/bbps/default/payment?invoice_id='+data;
+				}
+   			});
+		} else {
+			alert("Please select a Mobile Number");
+		}
 }
 </script>
 </div>
