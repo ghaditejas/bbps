@@ -5,7 +5,7 @@
 	<div class="page-header">
 		<h4>Invoice Listing</h4>
 		<div class="fieldstx">
-				<a class="btn btn-default" href="./index.html">Back</a>
+				<a class="btn btn-default" href="/partnerpay/web/bbps/default/">Back</a>
 		</div>
 		<!-- <div class="summary">Displaying <b>1-4</b> of <b>4</b> items.</div> -->
 	</div>
@@ -60,7 +60,7 @@
                            <?php } else { ?>
                                 <a class="btn btn-primary col col-md-3" id="<?php echo $data['INVOICE_ID'];?>" disabled="true">Pay Now</a>
                             <?php } ?>
-                                <a href="javascript:void(0)" style="margin-left:25px" class="btn btn-primary col col-md-3" >DETAILS</a>
+                                <a href="javascript:void(0)" style="margin-left:25px" onClick="getDetails('<?php echo $data['INVOICE_ID'];?>')" class="btn btn-primary col col-md-3" >DETAILS</a>
 								<a href="javascript:void(0)" class="col col-md-3"><span class="glyphicon glyphicon-trash"></span></a>
 							</div>
 						</td>
