@@ -263,53 +263,27 @@ class DefaultController extends HController
           $config_data = $config->queryAll();
           $chk = new Checksum();
           $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-          // $data=[
-          //   "Invoice_no"=> 59,
-          //   "private_key"=> "asdasdasdasd",
-          //   "checksum"=> "asdassdasdasdasd",
-          //   "BankResponse"=>[
-          //     [
-          //       "validationid"=> "12112114",
-          //       "validation_date"=> "07-02-2017 22:06:34",
-          //       "valid_until"=> "10-02-2017 22:06:34",
-          //       "billnumber"=> "9869457154",
-          //       "billdate"=> "02-08-2017",
-          //       "billduedate"=> "02-09-2017",
-          //       "billamount"=> "500.00",
-          //       "early_billduedate"=> "28-08-2017",
-          //       "early_billdiscount"=> "15.00",
-          //       "early_billamount"=> "485.00",
-          //       "late_payment_charges"=> "50.00",
-          //       "late_payment_amount"=> "550.00",
-          //       "net_billamount"=> "550.00"
-          //     ],
-          //     ]
-          //   ];
+          
           //   $this->enableCsrfValidation = false;
           //   echo "asdads";
             $post = Yii::$app->request->rawBody;
-            // print_r($post);
-            if($post){
-              return Yii::$app->response->statusCode = 200;
-            } else {
-              return Yii::$app->response->statusCode = 401;
-            }
-            // return true;
-            // print_r(json_encode($data));
-            // $data1 = json_encode($data);
-            // $data2 = json_decode($data1);*/
-            // $model= new TblProviderBillDetails();
-            // foreach($data2->BankResponse as $value){
-              //   $connection = Yii::$app->db;  
-              //   $connection->createCommand()
-              //   ->update('tbl_provider_bill_details', ['ISSUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->validation_date)),'DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->billduedate)),'EARLY_DISCOUNT'=>$value->early_billdiscount,'LATE_FEE'=>$value->late_payment_charges,'EARLY_DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->early_billduedate)),'NET_AMOUNT'=>$value->net_billamount,'AMOUNT'=>$value->billamount,'REF_NO'=>$value->validationid,'RESPONSE_NOT_RECIEVED'=>0], 'MOBILE_NO='.$value->billnumber.' AND INVOICE_ID='.$data2->Invoice_no)
-              //   ->execute();
-              //   echo "<br>";
-              //   print_r($value->validationid);
-              // }
+            $data2 = json_decode($post);
+            $model= new TblProviderBillDetails();
+            foreach($data2->BankResponse as $value){
+                $connection = Yii::$app->db;  
+                $connection->createCommand()
+                ->update('tbl_provider_bill_details', ['ISSUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->validation_date)),'DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->billduedate)),'EARLY_DISCOUNT'=>$value->early_billdiscount,'LATE_FEE'=>$value->late_payment_charges,'EARLY_DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->early_billduedate)),'NET_AMOUNT'=>$value->net_billamount,'AMOUNT'=>$value->billamount,'REF_NO'=>$value->validationid,'RESPONSE_NOT_RECIEVED'=>0], 'MOBILE_NO='.$value->billnumber.' AND INVOICE_ID='.$data2->Invoice_no)
+                ->execute();
+              }
+              $msg=$this->notification($data2->Invoice_no);
+              if(isset($msg)){
+                return Yii::$app->response->statusCode = 200;
+              } else {
+                return Yii::$app->response->statusCode = 401;
+              }
             }
             
-            public function actionListing($invoice_id="123"){
+            public function actionListing($invoice_id=""){
               $data=Yii::$app->user->identity;
               $connection = Yii::$app->db;
               $all_invoice = $connection
@@ -522,6 +496,22 @@ class DefaultController extends HController
                 }
               }
             }  
-            
+
+            public function notification($invoice_id){
+              $connection = Yii::$app->db;
+              $checkresponse = $connection
+              ->createCommand("Select Count(PROVIDER_BILL_DETAILS_ID) as bill_recieved from  tbl_provider_bill_details where INVOICE_ID=:invoice_id AND RESPONSE_NOT_RECIEVED=0");
+              $checkresponse->bindValue(':invoice_id', $invoice_id);
+              $checkresponse_data = $checkresponse->queryAll();
+              if($checkresponse_data[0]['bill_recieved']%5==0){
+                  //sms functionality;
+                  $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
+                  return $msg;
+              } else {
+                $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
+                  return $msg;
+                // print_r($checkresponse_data[0]['bill_recieved']%5);
+              }
+            } 
           }
           
