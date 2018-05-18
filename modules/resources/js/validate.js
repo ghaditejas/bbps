@@ -1,3 +1,6 @@
+$.validator.addMethod('filesize', function () {
+    return ($('input[name="bulk_upload"]')[0].files[0].size<= 200)
+}, 'File size must be less than {0}');
 $(document).ready(function () {
     $("#bill_details").validate({
         rules: {
@@ -14,7 +17,9 @@ $(document).ready(function () {
                 required:function(element){
                     return ($("#email").val().length == 0 && $("#fname").val().length == 0 && $("#lname").val().length == 0 && $("#mobile_no").val().length == 0);
                 },
-                extension: "csv"
+                extension: "csv",
+                filesize: true,
+                
             },
             fname:{
                 required: function(element){
@@ -47,6 +52,7 @@ $(document).ready(function () {
             bulk_upload: {
                 required: "This field is Required",
                 extension: "Invalid File Format",
+                filesize: "File size must be less than 124kb",
             },
             fname: {
                 required: "This field is Required",

@@ -212,7 +212,12 @@
             $("#select_all").prop('checked', false);
          }
 	});
-	 var invoice_id= <?php echo $invoice_id?>;
+	var check =parseInt(<?php echo $invoice_id?>);
+	if(check){
+	 var invoice_id= parseInt(<?php echo $invoice_id?>);
+	}else{
+		var invoice_id="";
+	}
 	 var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
 	 setInterval(fetchdata(invoice_id,csrf_token),5000);	
      });
