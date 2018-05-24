@@ -84,6 +84,8 @@ class DefaultController extends HController
             $data['lname'] = $fileop[1];
             $data['email']= $fileop[2];
             $data['mobile'] = $fileop[3];
+            $data['billerid']=Yii::$app->request->post('providers');
+            $data['remark']=Yii::$app->request->post('utility_name');
             $bill_details[]=$data;
             $this->bill_details($uploadedFile_data,$invoice_id,$data);
           }
@@ -110,6 +112,8 @@ class DefaultController extends HController
             $bill_details['lname']=Yii::$app->request->post('lname');
             $bill_details['email']=Yii::$app->request->post('email');
             $bill_details['mobile']=Yii::$app->request->post('mobile_no');
+            $bill_details['billerid']=Yii::$app->request->post('providers');
+            $bill_details['remark']=Yii::$app->request->post('utility_name');
             $this->bill_details(0,$invoice_id,$bill_details);
             return $this->render('loading',array('invoice_id'=>$invoice_id));
           }
@@ -123,12 +127,15 @@ class DefaultController extends HController
           $chk = new Checksum();
           $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
           $api_data=[
-            'Invoice_no'=>$invoice_id,
-            'profile_id'=>$config_data[0]['AIRPAY_MERCHANT_ID'],
-            'utitlity_id'=>Yii::$app->request->post('utility_name'),
-            'provide_id'=>Yii::$app->request->post('providers'),
+            // 'Invoice_no'=>$invoice_id,
+            "requestid"=>'',
+            'mercid'=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+            // 'utitlity_id'=>Yii::$app->request->post('utility_name'),
+            // 'provide_id'=>Yii::$app->request->post('providers'),
             'private_key'=>$privatekey,
-            'retunr_url'=>'192.168.1.127/partnerpay/web/bbps/default/response',
+            'retunr_url'=>'192.168.1.127/partnerpay/web/bbps/default/get_bill_response',
+            "callbackurl"=>'192.168.1.127/partnerpay/web/bbps/default/account_register_response',
+            "action"=>"ADD_BILLER",
             'checkSum'=>"",
             'bill_data'=>$bill_details,
           ];
@@ -222,6 +229,31 @@ class DefaultController extends HController
         
         public function bill_details($uploadedFile_data,$invoice_id,$data){
           $model= new TblProviderBillDetails();
+          if(Yii::$app->request->post('register')){
+            $model->IS_REGISTER='y';
+            $connection = Yii::$app->db;
+            $query="SELECT REF_NO from tbl_registered_account where ACCOUNT_NO=:account_no AND PROVIDE_ID=:provider_id AND UTILITY_ID=:utility_id AND IS_REGISTERED=1";
+            $check_registered = $connection
+                      ->createCommand($query);
+            $check_registered->bindValue(':account_no',$data['mobile']);
+            $check_registered->bindValue(':provider_id',Yii::$app->request->post('providers'));
+            $check_registered->bindValue(':utility_id',Yii::$app->request->post('utility_name'));
+            $check_registered_data = $check_registered->queryAll();
+            if(sizeof($check_registered_data)>0){
+                echo "WOrking";
+                exit;
+            } else {
+              $insert_query="INSERT into tbl_registered_account (UTILITY_ID,PROVIDE_ID,ACCOUNT_NO) VALUES (:utility_id,:provider_id,:account_no)";
+              $insert_registered = $connection
+                      ->createCommand($insert_query);
+              $insert_registered->bindValue(':account_no',$data['mobile']);
+              $insert_registered->bindValue(':provider_id',Yii::$app->request->post('providers'));
+              $insert_registered->bindValue(':utility_id',Yii::$app->request->post('utility_name'));
+              $insert_registered_data = $insert_registered->execute();
+            }
+          } else {
+            $model->IS_REGISTER='n';
+          }
           $model->PROVIDER_ID=Yii::$app->request->post('providers');
           $model->UTILITY_ID=Yii::$app->request->post('utility_name');
           if($uploadedFile_data['inserted_id']){
@@ -234,26 +266,32 @@ class DefaultController extends HController
           $data=Yii::$app->user->identity;
           $model->USER_ID= $data['USER_ID'];
           $model->INVOICE_ID=$invoice_id;
-          // $model->PAYMENT_STATUS="pending";
-          if(Yii::$app->request->post('register')){
-            $model->IS_REGISTER='y';
-          } else {
-            $model->IS_REGISTER='n';
-          }
           if($model->save(false)){
             $billing_details_id=$model->getPrimaryKey();
-            $invoice_bill= new TblInvoiceBillDetails();
-            $invoice_bill->INVOICE_ID=$invoice_id;
-            $invoice_bill->PROVIDER_BILL_DETAILS_ID=$billing_details_id;
-            $invoice_bill->INVOICE_GENERATED_DATE=date("Y-m-d");
-            $invoice_bill->PAYMENT_STATUS="pending";
-            $invoice_bill->MODIFIED_DATE=date("Y-m-d");
-            $invoice_bill->save();
+            // $invoice_bill= new TblInvoiceBillDetails();
+            // $invoice_bill->INVOICE_ID=$invoice_id;
+            // $invoice_bill->PROVIDER_BILL_DETAILS_ID=$billing_details_id;
+            // $invoice_bill->INVOICE_GENERATED_DATE=date("Y-m-d");
+            // $invoice_bill->PAYMENT_STATUS="pending";
+            // $invoice_bill->MODIFIED_DATE=date("Y-m-d");
+            // $invoice_bill->save();
           }
           
         }
-        
-        public function actionResponse(){
+
+        public function actionAccount_register_response(){
+          $post = Yii::$app->request->rawBody;
+          $data2 = json_decode($post);
+          $model= new TblProviderBillDetails();
+          foreach($data2->BankResponse as $value){
+            $connection = Yii::$app->db;  
+            $connection->createCommand()
+            ->update('tbl_registered_account', ['REF_NO'=>$value->Register_no,'IS_REGISTERED'=>1], 'ACCOUNT_NO='.$value->billnumber.' AND PROVIDER_ID='.$data2->Invoice_no)
+            ->execute();
+          }
+        }
+
+        public function actionBill_data_response(){
           $data=Yii::$app->user->identity;
           $connection = Yii::$app->db;
           $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
@@ -524,5 +562,18 @@ class DefaultController extends HController
             // print_r($checkresponse_data[0]['bill_recieved']%5);
           }
         } 
+
+        public function api_call($url,$data){
+            // print_r(json_encode($api_data));
+            //  $curl = curl_init('192.168.1.127/partnerpay/web/bbps/default/paymentstatus');
+            // curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
+            // curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            // curl_setopt($curl, CURLOPT_POST, true);
+            // curl_setopt($ch, CURLOPT_POSTFIELDS, $api_data);
+            // $curl_response = curl_exec($curl);
+            // curl_close($curl); 
+            // print_r($output);
+            // exit;
+        }
       }
       
