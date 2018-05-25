@@ -234,18 +234,18 @@ class DefaultController extends HController
             $connection = Yii::$app->db;
             $query="SELECT REF_NO from tbl_registered_account where ACCOUNT_NO=:account_no AND PROVIDE_ID=:provider_id AND UTILITY_ID=:utility_id AND IS_REGISTERED=1";
             $check_registered = $connection
-                      ->createCommand($query);
+            ->createCommand($query);
             $check_registered->bindValue(':account_no',$data['mobile']);
             $check_registered->bindValue(':provider_id',Yii::$app->request->post('providers'));
             $check_registered->bindValue(':utility_id',Yii::$app->request->post('utility_name'));
             $check_registered_data = $check_registered->queryAll();
             if(sizeof($check_registered_data)>0){
-                echo "WOrking";
-                exit;
+              echo "WOrking";
+              exit;
             } else {
               $insert_query="INSERT into tbl_registered_account (UTILITY_ID,PROVIDE_ID,ACCOUNT_NO) VALUES (:utility_id,:provider_id,:account_no)";
               $insert_registered = $connection
-                      ->createCommand($insert_query);
+              ->createCommand($insert_query);
               $insert_registered->bindValue(':account_no',$data['mobile']);
               $insert_registered->bindValue(':provider_id',Yii::$app->request->post('providers'));
               $insert_registered->bindValue(':utility_id',Yii::$app->request->post('utility_name'));
@@ -278,7 +278,7 @@ class DefaultController extends HController
           }
           
         }
-
+        
         public function actionAccount_register_response(){
           $post = Yii::$app->request->rawBody;
           $data2 = json_decode($post);
@@ -290,7 +290,7 @@ class DefaultController extends HController
             ->execute();
           }
         }
-
+        
         public function actionBill_data_response(){
           $data=Yii::$app->user->identity;
           $connection = Yii::$app->db;
@@ -545,7 +545,7 @@ class DefaultController extends HController
             //sms functionality;
             $signature = 'airpay';
             $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
-
+            
             $sms_data = \Yii::$app->params['sms']['data'];
             $sms_data = str_replace('{{{phone_number}}}', $checkresponse_data[0]['MOBILE'], $sms_data);
             $sms_data = str_replace('{{{message}}}', urlencode($msg), $sms_data);
@@ -562,18 +562,28 @@ class DefaultController extends HController
             // print_r($checkresponse_data[0]['bill_recieved']%5);
           }
         } 
-
+        
         public function api_call($url,$data){
-            // print_r(json_encode($api_data));
-            //  $curl = curl_init('192.168.1.127/partnerpay/web/bbps/default/paymentstatus');
-            // curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
-            // curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            // curl_setopt($curl, CURLOPT_POST, true);
-            // curl_setopt($ch, CURLOPT_POSTFIELDS, $api_data);
-            // $curl_response = curl_exec($curl);
-            // curl_close($curl); 
-            // print_r($output);
-            // exit;
+          // print_r(json_encode($api_data));
+          //  $curl = curl_init('192.168.1.127/partnerpay/web/bbps/default/paymentstatus');
+          // curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
+          // curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+          // curl_setopt($curl, CURLOPT_POST, true);
+          // curl_setopt($ch, CURLOPT_POSTFIELDS, $api_data);
+          // $curl_response = curl_exec($curl);
+          // curl_close($curl); 
+          // print_r($output);
+          // exit;
+        }
+        
+        public function actionGet_fields(){
+          $connection = Yii::$app->db;
+          $query="SELECT FIELDS from tbl_provider WHERE PROVIDER_ID=:provider_id";
+          $get_fields = $connection
+          ->createCommand($query);
+          $get_fields->bindValue(':provider_id',Yii::$app->request->post('provider_id'));
+          $get_fields_data = $get_fields->queryAll();
+          echo json_encode(explode('|',$get_fields_data[0]['FIELDS']));
         }
       }
       

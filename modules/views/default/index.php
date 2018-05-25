@@ -49,8 +49,11 @@
                     <div class="row">
                         <input type="hidden" name="_csrf" value="<?=Yii::$app->request->getCsrfToken()?>" />
                         <div class="col-md-4 opclist-warp">
-                            <ul class="opclist" id="providers">
-                            </ul>
+                            <!-- <select class="opclist" id="providers">
+                                <option value="">SELECT PROVIDER</option>
+                            </select> -->
+                            <!-- <ul class="opclist" id="providers">
+                            </ul> -->
                         </div>
                         <div class="col-md-8 opclist-box">
                             <h4>Mobile Bill Payment</h4>
@@ -66,6 +69,11 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-sm-12 col-md-8"><div class="form-group">
+                            <select class="form-control" id="providers" name="providers" onChange="getFields()">
+                                <option value="">SELECT PROVIDER</option>
+                            </select>
+                            </div></div>
                             <div><input type="hidden" id="utility_name" name="utility_name" value=""></div>
                             <div class="row" id="bulk">
                                 <div class="col-sm-12 col-md-8">
@@ -78,8 +86,8 @@
                                 <p class="text-center">OR</p>
                                 </div>
                             </div>      
-                            <div class="row" id="instant">
-                                <div class="col-sm-12 col-md-8">                            
+                            <div class="row" id="single">
+                                <!-- <div class="col-sm-12 col-md-8">                            
                                     <div class="form-group">
                                         <input type="text" class="form-control" id="mobile_no" name="mobile_no" placeholder="Enter Your Account Number">
                                         <div class="help-block"></div>
@@ -105,13 +113,13 @@
                                         <input type="text" class="form-control" id="email" name="email" placeholder="Enter your Email">
                                         <div class="help-block"></div>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                             <div class="row">
                                 <div class="col-sm-12 col-md-8">
                                     <div class="form-group">                    
                                     <!-- <input type="submit" class="btn btn-primary lg-btn" id="submitform" value="Submit"> -->
-                                    <input type="submit" class="btn btn-primary lg-btn" value="Submit" name="submit">
+                                    <input type="submit" class="btn btn-primary lg-btn" value="Submit" name="submitButton">
                                     </div>
                                 </div>
                             </div>
@@ -164,11 +172,41 @@ function setUtility(id,name){
       dataType: "json",
       success: function(data) {
             $('#providers').empty();
+            console.log(data);
+            $('#providers').append('<option value="">SELECT PROVIDERS</option>');
            $.each(data, function (key, value) {
-                    var provider_list='<li><label class="radio-inline"><input type="radio" name="providers" id="providers" value="'+value.id+'">'+value.name+'</label></li>';
+                    // var provider_list='<li><label class="radio-inline"><input type="radio" name="providers" id="providers" value="'+value.id+'">'+value.name+'</label></li>';
+                    var provider_list='<option value="'+value.id+'">'+value.name+'</option>';
                     $('#providers').append(provider_list);
              });
       }
    });
+}
+
+function getFields(){
+    var provider = $("#providers").val();
+    if(provider){
+     $.ajax({
+      url: "/partnerpay/web/bbps/default/get_fields",  
+      data: {provider_id: provider},
+      type: "POST",
+      dataType: "json",
+      success: function(data) {
+            $('#single').empty();
+           $.each(data, function (key, value) {
+                    var fields='<div class="col-sm-12 col-md-8"><div class="form-group"><input type="text" name="'+value+'" class="dynamic_field form-control" placeholder="Enter your '+value+'" value=""><span class="error"></span></div></div>';
+                    $('#single').append(fields);
+             });
+             $('.dynamic_field').each(function(){
+                 $(this).rules("add", { 
+                    required:true,  
+                    messages: {
+                        required: "This Field is Required"
+                    }
+                });
+             })
+      }
+   });
+   }
 }
 </script>
