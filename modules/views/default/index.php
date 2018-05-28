@@ -199,7 +199,9 @@ function getFields(){
              });
              $('.dynamic_field').each(function(){
                  $(this).rules("add", { 
-                    required:true,  
+                    required:function(element){
+                      return ($("#bulk_upload").val().length == 0);
+                    },  
                     messages: {
                         required: "This Field is Required"
                     }

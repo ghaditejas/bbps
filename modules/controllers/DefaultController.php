@@ -52,6 +52,7 @@ class DefaultController extends HController
     }
     
     public function actionPaying(){
+      $fields = json_decode($this->actionGet_fields(Yii::$app->request->post('providers')),true);
       if($_FILES['bulk_upload']['tmp_name']){
         $uploadedFile_data = $this->upload();
         if($uploadedFile_data){
@@ -75,21 +76,27 @@ class DefaultController extends HController
           }
           $bill_details=array();
           $data=array();
+          $fields_data=array();
           $handle = fopen( Yii::$app->getBasePath()."/modules/resources/upload/".$uploadedFile_data['file_name'], "r");
           fgetcsv($handle);
           while (($fileop = fgetcsv($handle, 1024, ",")) !== false) 
           {
-            $data['account_id']= $fileop[3];
-            $data['fname'] = $fileop[0];
-            $data['lname'] = $fileop[1];
-            $data['email']= $fileop[2];
-            $data['mobile'] = $fileop[3];
+            $i=1;
+            $data['account_id']= $fileop[0];
+            // $data['fname'] = $fileop[0];
+            // $data['lname'] = $fileop[1];
+            // $data['email']= $fileop[2];
+            // $data['mobile'] = $fileop[3];
+            for($i=1;$i<sizeof($start);$i++){
+              $fields_data[$fields[$i]]=$fileop[$i];
+            }
+            $data['details']=json_encode($fields_data);
             $data['billerid']=Yii::$app->request->post('providers');
             $data['remark']=Yii::$app->request->post('utility_name');
             $bill_details[]=$data;
             $this->bill_details($uploadedFile_data,$invoice_id,$data);
           }
-          return $this->render('data_uploaded',array('invoice_id'=>$invoice_id));
+          // return $this->render('data_uploaded',array('invoice_id'=>$invoice_id));
         } else{
           echo "Error while uploading file";
         }
@@ -107,11 +114,15 @@ class DefaultController extends HController
               $ref_no=$this->archieve_data();
             }
             $invoice_id = $this->invoice_create();
-            $bill_details['account_id']=Yii::$app->request->post('mobile_no');
-            $bill_details['fname']=Yii::$app->request->post('fname');
-            $bill_details['lname']=Yii::$app->request->post('lname');
-            $bill_details['email']=Yii::$app->request->post('email');
-            $bill_details['mobile']=Yii::$app->request->post('mobile_no');
+            $bill_details['account_id']=Yii::$app->request->post(str_replace(' ','_',$fields[0]));
+            // $bill_details['fname']=Yii::$app->request->post('fname');
+            // $bill_details['lname']=Yii::$app->request->post('lname');
+            // $bill_details['email']=Yii::$app->request->post('email');
+            // $bill_details['mobile']=Yii::$app->request->post('mobile_no');
+            for($i=1;$i<sizeof($fields);$i++){
+              $fields_data[$fields[$i]]=Yii::$app->request->post(str_replace(' ','_',$fields[$i]));
+            }
+            $bill_details['details']=json_encode($fields_data);
             $bill_details['billerid']=Yii::$app->request->post('providers');
             $bill_details['remark']=Yii::$app->request->post('utility_name');
             $this->bill_details(0,$invoice_id,$bill_details);
@@ -139,6 +150,8 @@ class DefaultController extends HController
             'checkSum'=>"",
             'bill_data'=>$bill_details,
           ];
+          print_r(json_encode($api_data));
+          exit;
           // echo "<pre>";
           // print_r(json_encode($api_data));
           // $curl = curl_init('https://devel-payments.airpayme.com/bbps/bulk_process_invoice.php');
@@ -259,10 +272,12 @@ class DefaultController extends HController
           if($uploadedFile_data['inserted_id']){
             $model->PROVIDER_BILL_UPLOAD_DETAILS_ID=$uploadedFile_data['inserted_id'];
           }
-          $model->FNAME=$data['fname'];
-          $model->LNAME=$data['lname'];
-          $model->EMAIL=$data['email'];
-          $model->MOBILE_NO=$data['mobile'];
+          $model->ACCOUNT_NO=$data['account_id'];
+          $model->DETAILS=$data['details'];
+          // $model->FNAME=$data['fname'];
+          // $model->LNAME=$data['lname'];
+          // $model->EMAIL=$data['email'];
+          // $model->MOBILE_NO=$data['mobile'];
           $data=Yii::$app->user->identity;
           $model->USER_ID= $data['USER_ID'];
           $model->INVOICE_ID=$invoice_id;
@@ -479,6 +494,9 @@ class DefaultController extends HController
         
         public function actionPaymentstatus(){
           $post = Yii::$app->request->rawBody;
+          echo "RESULT:";
+          print_r($post);
+          exit;
           if($post){
             $data=Yii::$app->user->identity;
             $connection = Yii::$app->db;
@@ -563,27 +581,51 @@ class DefaultController extends HController
           }
         } 
         
-        public function api_call($url,$data){
-          // print_r(json_encode($api_data));
-          //  $curl = curl_init('192.168.1.127/partnerpay/web/bbps/default/paymentstatus');
-          // curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
-          // curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-          // curl_setopt($curl, CURLOPT_POST, true);
-          // curl_setopt($ch, CURLOPT_POSTFIELDS, $api_data);
-          // $curl_response = curl_exec($curl);
-          // curl_close($curl); 
-          // print_r($output);
-          // exit;
+        public function api_call($url,$api_data){
+	        $curl = curl_init($url);
+	        curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
+	        //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+	        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+          curl_setopt($curl, CURLOPT_POST, 1);
+          curl_setopt($curl, CURLOPT_POSTFIELDS,$api_data);
+          $curl_response = curl_exec($curl);
+          curl_close($curl);
+          return json_decode($curl_response,true);
         }
         
-        public function actionGet_fields(){
+        public function actionGet_fields($provider_id=""){
+          if($provider_id==""){
+            $provider_id=Yii::$app->request->post('provider_id');
+          }
           $connection = Yii::$app->db;
           $query="SELECT FIELDS from tbl_provider WHERE PROVIDER_ID=:provider_id";
           $get_fields = $connection
           ->createCommand($query);
-          $get_fields->bindValue(':provider_id',Yii::$app->request->post('provider_id'));
+          $get_fields->bindValue(':provider_id',$provider_id);
           $get_fields_data = $get_fields->queryAll();
-          echo json_encode(explode('|',$get_fields_data[0]['FIELDS']));
+          return json_encode(explode('|',$get_fields_data[0]['FIELDS']));
+        }
+
+        public function actionGet_billerid(){
+          $data=Yii::$app->user->identity;
+          $connection = Yii::$app->db;
+          $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+          $config = $connection
+          ->createCommand($query);
+          $config->bindValue(':partner_id',$data['PARTNER_ID']);
+          $config_data = $config->queryAll();
+          $chk = new Checksum();
+          $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+          $data = [
+            "privatekey"=>$privatekey,
+            "checksum"=>"",
+            "mercid"=>"245",
+          ];
+          $api_data=json_encode($data);
+          $url="https://devel-payments.airpayme.com/bbps/getBillerId.php";
+          $billerdata = $this->api_call($url,$api_data);
+          echo "<pre>";      
+          print_r($billerdata['BILLERDATA']);
         }
       }
       
