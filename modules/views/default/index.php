@@ -82,7 +82,9 @@
                                             <input type="file" id="bulk_upload" title="Bulk Upload" name="bulk_upload">
                                         </div>                 
                                     </div>
-                                
+                                    <div id="download_csv">
+
+                                    </div>
                                 <p class="text-center">OR</p>
                                 </div>
                             </div>      
@@ -134,10 +136,6 @@
       
 
         <script type="text/javascript" src="/partnerpay/modules/resources/js/jquery.js"></script>
-        <!-- <script type="text/javascript" src="/partnerpay/modules/resources/js/jquery-2.2.3.min.js"></script> -->
-        <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.js"></script>
-        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/additional-methods.js"></script>
-        <script type="text/javascript" src="/partnerpay/modules/resources/js/validate.js"></script> -->
         <script type="text/javascript" src="/partnerpay/modules/resources/js/bootstrap.file-input.js"></script>
         <script type="text/javascript" src="/partnerpay/modules/resources/js/customs.js"></script>
 
@@ -150,18 +148,6 @@
         
     </div>
 </div>
-<script>
-//  $('body').on('click', '#myonoffswitch5', function() {
-//     var value=$("#myonoffswitch5").prop('checked');
-//         if(value){
-//             $("#instant").addClass("hidden");
-//             $("#bulk").removeClass("hidden");
-//         } else {
-//             $("#bulk").addClass("hidden");
-//             $("#instant").removeClass("hidden");
-//         }
-// });
-</script>
 <script>
 function setUtility(id,name){
     $("#utility_name").val(id);
@@ -207,6 +193,7 @@ function getFields(){
                     }
                 });
              })
+             $('#download_csv').empty().append("<a href='/partnerpay/web/bbps/default/download_csv_file?provider="+provider+"' target='_blank' >Download Format</a>")
       }
    });
    }

@@ -87,7 +87,7 @@ class DefaultController extends HController
             // $data['lname'] = $fileop[1];
             // $data['email']= $fileop[2];
             // $data['mobile'] = $fileop[3];
-            for($i=1;$i<sizeof($start);$i++){
+            for($i=1;$i<sizeof($fields);$i++){
               $fields_data[$fields[$i]]=$fileop[$i];
             }
             $data['details']=json_encode($fields_data);
@@ -141,8 +141,6 @@ class DefaultController extends HController
             // 'Invoice_no'=>$invoice_id,
             "requestid"=>'',
             'mercid'=>$config_data[0]['AIRPAY_MERCHANT_ID'],
-            // 'utitlity_id'=>Yii::$app->request->post('utility_name'),
-            // 'provide_id'=>Yii::$app->request->post('providers'),
             'private_key'=>$privatekey,
             'retunr_url'=>'192.168.1.127/partnerpay/web/bbps/default/get_bill_response',
             "callbackurl"=>'192.168.1.127/partnerpay/web/bbps/default/account_register_response',
@@ -150,8 +148,6 @@ class DefaultController extends HController
             'checkSum'=>"",
             'bill_data'=>$bill_details,
           ];
-          print_r(json_encode($api_data));
-          exit;
           // echo "<pre>";
           // print_r(json_encode($api_data));
           // $curl = curl_init('https://devel-payments.airpayme.com/bbps/bulk_process_invoice.php');
@@ -203,25 +199,28 @@ class DefaultController extends HController
         public function archieve_data(){
           $data=Yii::$app->user->identity;
           $connection = Yii::$app->db;
-          $query1="SELECT * FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register";
+          $query1="SELECT * FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register AND PAYMENT_STATUS <>:payment_status";
           $registered = $connection
           ->createCommand($query1);
           $registered->bindValue(':user_id',$data['USER_ID']);
           $registered->bindValue(':is_register','y');
+          $registered->bindValue(':payment_status','');
           $registered_data = $registered->queryAll();
           if(sizeof($registered_data)){
-            $query="INSERT into tbl_archived_provider_bill_details SELECT * FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register";
+            $query="INSERT into tbl_archived_provider_bill_details SELECT * FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register AND PAYMENT_STATUS <>:payment_status";
             $archieve = $connection
             ->createCommand($query);
             $archieve->bindValue(':user_id',$data['USER_ID']);
             $archieve->bindValue(':is_register','y');
+            $archieve->bindValue(':payment_status','');
             $archieve_data = $archieve->execute();
             if($archieve_data){
-              $query2="DELETE FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register";
+              $query2="DELETE FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register AND PAYMENT_STATUS <>:payment_status";
               $registered = $connection
               ->createCommand($query2);
               $registered->bindValue(':user_id',$data['USER_ID']);
               $registered->bindValue(':is_register','y');
+              $registered->bindValue(':payment_status','');
               $registered_data = $registered->execute();
             }
             return $registered_data[0]['REF_NO'];
@@ -248,7 +247,7 @@ class DefaultController extends HController
             $query="SELECT REF_NO from tbl_registered_account where ACCOUNT_NO=:account_no AND PROVIDE_ID=:provider_id AND UTILITY_ID=:utility_id AND IS_REGISTERED=1";
             $check_registered = $connection
             ->createCommand($query);
-            $check_registered->bindValue(':account_no',$data['mobile']);
+            $check_registered->bindValue(':account_no',$data['account_id']);
             $check_registered->bindValue(':provider_id',Yii::$app->request->post('providers'));
             $check_registered->bindValue(':utility_id',Yii::$app->request->post('utility_name'));
             $check_registered_data = $check_registered->queryAll();
@@ -259,7 +258,7 @@ class DefaultController extends HController
               $insert_query="INSERT into tbl_registered_account (UTILITY_ID,PROVIDE_ID,ACCOUNT_NO) VALUES (:utility_id,:provider_id,:account_no)";
               $insert_registered = $connection
               ->createCommand($insert_query);
-              $insert_registered->bindValue(':account_no',$data['mobile']);
+              $insert_registered->bindValue(':account_no',$data['account_id']);
               $insert_registered->bindValue(':provider_id',Yii::$app->request->post('providers'));
               $insert_registered->bindValue(':utility_id',Yii::$app->request->post('utility_name'));
               $insert_registered_data = $insert_registered->execute();
@@ -560,7 +559,6 @@ class DefaultController extends HController
           $checkresponse->bindValue(':invoice_id', $invoice_id);
           $checkresponse_data = $checkresponse->queryAll();
           if($checkresponse_data[0]['bill_recieved']%5==0){
-            //sms functionality;
             $signature = 'airpay';
             $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
             
@@ -577,15 +575,14 @@ class DefaultController extends HController
           } else {
             $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
             return $msg;
-            // print_r($checkresponse_data[0]['bill_recieved']%5);
           }
         } 
         
         public function api_call($url,$api_data){
-	        $curl = curl_init($url);
-	        curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
-	        //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-	        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+          $curl = curl_init($url);
+          curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
+          //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+          curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
           curl_setopt($curl, CURLOPT_POST, 1);
           curl_setopt($curl, CURLOPT_POSTFIELDS,$api_data);
           $curl_response = curl_exec($curl);
@@ -605,7 +602,7 @@ class DefaultController extends HController
           $get_fields_data = $get_fields->queryAll();
           return json_encode(explode('|',$get_fields_data[0]['FIELDS']));
         }
-
+        
         public function actionGet_billerid(){
           $data=Yii::$app->user->identity;
           $connection = Yii::$app->db;
@@ -624,8 +621,50 @@ class DefaultController extends HController
           $api_data=json_encode($data);
           $url="https://devel-payments.airpayme.com/bbps/getBillerId.php";
           $billerdata = $this->api_call($url,$api_data);
-          echo "<pre>";      
-          print_r($billerdata['BILLERDATA']);
+          foreach($billerdata['BILLERDATA'] as $value){
+            $connection = Yii::$app->db;
+            $query="SELECT utility_id from tbl_utility where utility_name=:utility";
+            $check_utility = $connection->createCommand($query);
+            $check_utility->bindValue(':utility',$value['BILLER_CATEGORY']);
+            $check_utility_data = $check_utility->queryAll();
+            if(sizeof($check_utility_data)>0){
+              $utility_id=$check_utility_data[0]['utility_id'];
+            }else{
+              $data=Yii::$app->user->identity;
+              $query1="INSERT into tbl_utility (utility_name,user_id) VALUES (:utility_name,:user)";
+              $check_utility = $connection
+              ->createCommand($query1);
+              $check_utility->bindValue(':utility_name',$value['BILLER_CATEGORY']);
+              $check_utility->bindValue(':user',$data['USER_ID']);
+              $check_utility_data = $check_utility->execute();
+              $utility_id = $connection->getLastInsertID();
+            }
+            $query2 = "INSERT into tbl_provider (utility_id,provider_name,FIELDS,BILLER_MASTER_ID) SELECT * FROM (SELECT :utility_id,:provider_name,:fields,:biller_master_id) AS tmp
+            WHERE NOT EXISTS (
+                SELECT provider_name FROM tbl_provider WHERE provider_name = :provider_name
+            )";
+            $provider_update=$connection->createCommand($query2);
+            $provider_update->bindValue(':utility_id',$utility_id);
+            $provider_update->bindValue(':provider_name',$value['BILLER_NAME']);
+            $provider_update->bindValue(':fields',$value['FIELDNAMES']);
+            $provider_update->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
+            $provider_update_data = $provider_update->execute();
+            // print_r($provider_update_data);
+          }
+        }
+        
+        public function actionDownload_csv_file($provider){
+          $fields = json_decode($this->actionGet_fields($provider),true);
+          $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
+          header('Content-Type: text/csv');
+          header('Content-Disposition: attachment; filename='. $name);
+          header('Pragma: no-cache');
+          header("Expires: 0");
+          
+          $outstream = fopen("php://output", "w");
+          fputcsv($outstream, $fields);
+          fclose($outstream);
+          exit;
         }
       }
       
