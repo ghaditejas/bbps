@@ -1,7 +1,18 @@
 $.validator.addMethod('filesize', function () {
     console.log($('input[name="bulk_upload"]')[0].files[0].size);
-    return ($('input[name="bulk_upload"]')[0].files[0].size<= 200)
+    if($('input[name="bulk_upload"]')[0].files[0]){
+        return ($('input[name="bulk_upload"]')[0].files[0].size>= 200)
+    } else {
+        return true;
+    }
 }, 'File size must be less than {0}');
+$.validator.addMethod("regex",function(value, element, regexp) {
+    // console.log('asdasd');
+        var check = false;
+        return this.optional(element) || regexp.test(value);
+    },
+    "Please check your input."
+);
 $(document).ready(function () {
     $("#bill_details").validate({
         rules: {

@@ -180,19 +180,19 @@ function getFields(){
       success: function(data) {
             $('#single').empty();
            $.each(data, function (key, value) {
-                    var fields='<div class="col-sm-12 col-md-8"><div class="form-group"><input type="text" name="'+value+'" class="dynamic_field form-control" placeholder="Enter your '+value+'" value=""><span class="error"></span></div></div>';
+                    var fields='<div class="col-sm-12 col-md-8"><div class="form-group"><input type="text" name="'+value.field+'" class="dynamic_field form-control" placeholder="Enter your '+value.field+'" value=""><span class="error"></span></div></div>';
                     $('#single').append(fields);
-             });
-             $('.dynamic_field').each(function(){
-                 $(this).rules("add", { 
+                 $('input[name="'+value.field+'"]').rules("add", { 
                     required:function(element){
                       return ($("#bulk_upload").val().length == 0);
                     },  
+                    regex: new RegExp(value.validation),
                     messages: {
-                        required: "This Field is Required"
+                        required: "This Field is Required",
+                        regex: 'PLEASE PROVIDE PROPER INPUT'
                     }
                 });
-             })
+            });
              $('#download_csv').empty().append("<a href='/partnerpay/web/bbps/default/download_csv_file?provider="+provider+"' target='_blank' >Download Format</a>")
       }
    });

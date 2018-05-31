@@ -595,12 +595,24 @@ class DefaultController extends HController
             $provider_id=Yii::$app->request->post('provider_id');
           }
           $connection = Yii::$app->db;
-          $query="SELECT FIELDS from tbl_provider WHERE PROVIDER_ID=:provider_id";
+          $query="SELECT FIELDS ,VALIDATIONS from tbl_provider WHERE PROVIDER_ID=:provider_id";
           $get_fields = $connection
           ->createCommand($query);
           $get_fields->bindValue(':provider_id',$provider_id);
           $get_fields_data = $get_fields->queryAll();
-          return json_encode(explode('|',$get_fields_data[0]['FIELDS']));
+          $fields= explode('|',$get_fields_data[0]['FIELDS']);
+          if(Yii::$app->request->post('provider_id')){
+            $validtions = explode('::',$get_fields_data[0]['VALIDATIONS']);
+            $fields_validation = array();
+            foreach($fields as $key=>$value){
+              $field['field']=$value;
+              $field['validation']=$validtions[$key];
+              $fields_validation[] = $field;
+            }
+            return json_encode($fields_validation);
+          } else {
+            return json_encode($fields);
+          }
         }
         
         public function actionGet_billerid(){
@@ -621,6 +633,9 @@ class DefaultController extends HController
           $api_data=json_encode($data);
           $url="https://devel-payments.airpayme.com/bbps/getBillerId.php";
           $billerdata = $this->api_call($url,$api_data);
+          // echo "<pre>";
+          // print_r($billerdata);
+          // exit;
           foreach($billerdata['BILLERDATA'] as $value){
             $connection = Yii::$app->db;
             $query="SELECT utility_id from tbl_utility where utility_name=:utility";
@@ -639,32 +654,33 @@ class DefaultController extends HController
               $check_utility_data = $check_utility->execute();
               $utility_id = $connection->getLastInsertID();
             }
-            $query2 = "INSERT into tbl_provider (utility_id,provider_name,FIELDS,BILLER_MASTER_ID) SELECT * FROM (SELECT :utility_id,:provider_name,:fields,:biller_master_id) AS tmp
+            $query2 = "INSERT into tbl_provider (utility_id,provider_name,FIELDS,BILLER_MASTER_ID,VALIDATIONS) SELECT * FROM (SELECT :utility_id,:provider_name,:fields,:biller_master_id,:validations) AS tmp
             WHERE NOT EXISTS (
-                SELECT provider_name FROM tbl_provider WHERE provider_name = :provider_name
-            )";
-            $provider_update=$connection->createCommand($query2);
-            $provider_update->bindValue(':utility_id',$utility_id);
-            $provider_update->bindValue(':provider_name',$value['BILLER_NAME']);
-            $provider_update->bindValue(':fields',$value['FIELDNAMES']);
-            $provider_update->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
-            $provider_update_data = $provider_update->execute();
-            // print_r($provider_update_data);
+              SELECT provider_name FROM tbl_provider WHERE provider_name = :provider_name
+              )";
+              $provider_update=$connection->createCommand($query2);
+              $provider_update->bindValue(':utility_id',$utility_id);
+              $provider_update->bindValue(':provider_name',$value['BILLER_NAME']);
+              $provider_update->bindValue(':fields',$value['FIELDNAMES']);
+              $provider_update->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
+              $provider_update->bindValue(':validations',$value['VALIDATION']);
+              $provider_update_data = $provider_update->execute();
+              print_r($provider_update_data);
+            }
+          }
+          
+          public function actionDownload_csv_file($provider){
+            $fields = json_decode($this->actionGet_fields($provider),true);
+            $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename='. $name);
+            header('Pragma: no-cache');
+            header("Expires: 0");
+            
+            $outstream = fopen("php://output", "w");
+            fputcsv($outstream, $fields);
+            fclose($outstream);
+            exit;
           }
         }
         
-        public function actionDownload_csv_file($provider){
-          $fields = json_decode($this->actionGet_fields($provider),true);
-          $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
-          header('Content-Type: text/csv');
-          header('Content-Disposition: attachment; filename='. $name);
-          header('Pragma: no-cache');
-          header("Expires: 0");
-          
-          $outstream = fopen("php://output", "w");
-          fputcsv($outstream, $fields);
-          fclose($outstream);
-          exit;
-        }
-      }
-      
