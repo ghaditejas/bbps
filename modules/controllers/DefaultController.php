@@ -83,18 +83,14 @@ class DefaultController extends HController
           {
             $i=1;
             $data['account_id']= $fileop[0];
-            // $data['fname'] = $fileop[0];
-            // $data['lname'] = $fileop[1];
-            // $data['email']= $fileop[2];
-            // $data['mobile'] = $fileop[3];
             for($i=1;$i<sizeof($fields);$i++){
               $fields_data[$fields[$i]]=$fileop[$i];
             }
             $data['details']=json_encode($fields_data);
             $data['billerid']=Yii::$app->request->post('providers');
             $data['remark']=Yii::$app->request->post('utility_name');
-            $bill_details[]=$data;
             $this->bill_details($uploadedFile_data,$invoice_id,$data);
+            $bill_details[]=$data;
           }
           // return $this->render('data_uploaded',array('invoice_id'=>$invoice_id));
         } else{
@@ -113,20 +109,20 @@ class DefaultController extends HController
             if(Yii::$app->request->post('register')){
               $ref_no=$this->archieve_data();
             }
+            $bill_details=array();
+            $data=array();
             $invoice_id = $this->invoice_create();
-            $bill_details['account_id']=Yii::$app->request->post(str_replace(' ','_',$fields[0]));
-            // $bill_details['fname']=Yii::$app->request->post('fname');
-            // $bill_details['lname']=Yii::$app->request->post('lname');
-            // $bill_details['email']=Yii::$app->request->post('email');
-            // $bill_details['mobile']=Yii::$app->request->post('mobile_no');
+            $data['account_id']=Yii::$app->request->post(str_replace(' ','_',$fields[0]));
             for($i=1;$i<sizeof($fields);$i++){
               $fields_data[$fields[$i]]=Yii::$app->request->post(str_replace(' ','_',$fields[$i]));
             }
-            $bill_details['details']=json_encode($fields_data);
-            $bill_details['billerid']=Yii::$app->request->post('providers');
-            $bill_details['remark']=Yii::$app->request->post('utility_name');
-            $this->bill_details(0,$invoice_id,$bill_details);
-            return $this->render('loading',array('invoice_id'=>$invoice_id));
+            $data['details']=json_encode($fields_data);
+            // $data['billerid']=Yii::$app->request->post('providers');
+            $data['billerid']=1;
+            $data['remark']=Yii::$app->request->post('utility_name');
+            $this->bill_details(0,$invoice_id,$data);
+            $bill_details[]=$data;
+            // return $this->render('loading',array('invoice_id'=>$invoice_id));
           }
           $data=Yii::$app->user->identity;
           $connection = Yii::$app->db;
@@ -137,19 +133,27 @@ class DefaultController extends HController
           $config_data = $config->queryAll();
           $chk = new Checksum();
           $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-          $api_data=[
-            // 'Invoice_no'=>$invoice_id,
-            "requestid"=>'',
-            'mercid'=>$config_data[0]['AIRPAY_MERCHANT_ID'],
-            'private_key'=>$privatekey,
-            'retunr_url'=>'192.168.1.127/partnerpay/web/bbps/default/get_bill_response',
-            "callbackurl"=>'192.168.1.127/partnerpay/web/bbps/default/account_register_response',
+          $apidata=[
+            "requestid"=>$invoice_id,
+            // 'mercid'=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+            'mercid'=>245,
+            "customerid"=>1,
+            // 'private_key'=>$privatekey,
+            'private_key'=>'',
+            'callbackurl'=>'192.168.1.184/partnerpay/web/bbps/default/get_bill_response',
+            "returnurl"=>'192.168.1.184/partnerpay/web/bbps/default/account_register_response',
             "action"=>"ADD_BILLER",
             'checkSum'=>"",
             'bill_data'=>$bill_details,
           ];
-          // echo "<pre>";
-          // print_r(json_encode($api_data));
+          echo "<pre>";
+          $api_data = json_encode($apidata);
+          print_r($apidata);
+          echo '<br>';
+          $url='https://devel-payments.airpayme.com/bbps/add_biller.php';
+          $response= $this->api_call($url,$api_data);
+          print_r($response);
+          exit;
           // $curl = curl_init('https://devel-payments.airpayme.com/bbps/bulk_process_invoice.php');
           // curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
           // curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
@@ -289,6 +293,7 @@ class DefaultController extends HController
             // $invoice_bill->PAYMENT_STATUS="pending";
             // $invoice_bill->MODIFIED_DATE=date("Y-m-d");
             // $invoice_bill->save();
+            // return $billing_details_id;
           }
           
         }
@@ -296,6 +301,19 @@ class DefaultController extends HController
         public function actionAccount_register_response(){
           $post = Yii::$app->request->rawBody;
           $data2 = json_decode($post);
+          $log_filename = "/partnerpay/modules/resources/log/checklog";
+          // if (!file_exists($log_filename)) 
+          // {
+          //     // create directory/folder uploads.
+          //     mkdir($log_filename, 0777, true);
+          // }
+          // $log_file_data = $log_filename.'/log_' . date('d-M-Y') . '.log';
+          file_put_contents('/partnerpay/modules/resources/log/log2.txt', print_r($data2), FILE_APPEND);
+          $myfile = fopen("/partnerpay/modules/resources/log/log2.txt", "r");
+          $data = fread($myfile,filesize("/partnerpay/modules/resources/log/log2.txt"));
+          fclose($myfile);
+          echo $data;
+          exit;
           $model= new TblProviderBillDetails();
           foreach($data2->BankResponse as $value){
             $connection = Yii::$app->db;  
@@ -467,14 +485,16 @@ class DefaultController extends HController
               'Invoice_no'=>Yii::$app->request->post('TRANSACTIONID'),
               'profile_id'=>'',
               'utitlity_id'=>$invoice_data[0]['UTILITY_ID'],
-              'provide_id'=>$invoice_data[0]['PROVIDER_ID'],
+              'provider_id'=>$invoice_data[0]['PROVIDER_ID'],
               'private_key'=>'',
               'retunr_url'=>'',
               'checkSum'=>'',
               'airpay_id'=>Yii::$app->request->post('APTRANSACTIONID'),
               'payment_data'=>$bill_details,
             ];
-            //  print_r(json_encode($api_data));
+             echo"<pre>";
+             print_r(($api_data));
+             exit;
             //  $curl = curl_init('192.168.1.127/partnerpay/web/bbps/default/paymentstatus');
             // curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
             // curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
@@ -587,6 +607,8 @@ class DefaultController extends HController
           curl_setopt($curl, CURLOPT_POSTFIELDS,$api_data);
           $curl_response = curl_exec($curl);
           curl_close($curl);
+          print_r($curl_response);
+          exit;
           return json_decode($curl_response,true);
         }
         
