@@ -17,7 +17,7 @@
                     <input type="hidden" name="privatekey" value="<?php echo $key; ?>">
                     <input type="hidden" name="mercid" value="<?php echo $mechant_id; ?>">
 				    <input type="hidden" name="orderid" value="<?php echo $payment_data['invoice_no']; ?>">
-                    <input type="hidden" name="amount" value="356.00">
+                    <input type="hidden" name="amount" value="<?php echo $payment_data['invoice_amount']; ?>">
                     <input type="hidden" name="buyerEmail" value="<?php echo $data['EMAIL']; ?>">
                     <input type="hidden" name="buyerPhone" value="9869478152">
                     <input type="hidden" name="buyerFirstName" value="<?php echo $data['FIRST_NAME']; ?>">
