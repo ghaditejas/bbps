@@ -106,12 +106,8 @@
 			<thead>
 			<tr>
 				<th class="text-center idnum">#</th>
-				<th class="text-center">Mobile No.</th>
-				<th class="text-center">Issue Date</th>
+				<th class="text-center">Account No.</th>
 				<th class="text-center">Due Date</th>
-                <th class="text-center">Early Due Date</th>
-                <th class="text-center">Early Fee</th>
-                <th class="text-center">Late Fee</th>
 				<th class="text-center">Amount</th>
 				<th class="text-center action">&nbsp;</th>
 			</tr>
@@ -121,18 +117,14 @@
                 <?php
                     $i=1;
                 foreach($invoice_data as $invoice_value) {?>
-					<tr id="<?=$invoice_value['MOBILE_NO'];?>">
+					<tr id="<?=$invoice_value['ACCOUNT_NO'];?>">
 						<td class="idnum"><?=$i;?></td>
-						<td><?=$invoice_value['MOBILE_NO'];?></td>
-						<td><?=date("d-m-Y",strtotime($invoice_value['ISSUE_DATE']));?></td>
+						<td><?=$invoice_value['ACCOUNT_NO'];?></td>
 						<td><?=date("d-m-Y",strtotime($invoice_value['DUE_DATE']));?></td>
-                        <td><?=date("d-m-Y",strtotime($invoice_value['EARLY_DUE_DATE']));?></td>
-                        <td><?=$invoice_value['EARLY_DISCOUNT'];?></td>
-                        <td><?=$invoice_value['LATE_FEE'];?></td>
-						<td class="text-right"><?=$invoice_value['NET_AMOUNT'];?></td>
+						<td class="text-right"><?=$invoice_value['AMOUNT'];?></td>
 						<td class="action">
 							<div class="bbox">
-								<a onClick="remove_mobile('<?=$invoice_value['MOBILE_NO'];?>','<?=$invoice_value['INVOICE_ID'];?>')"><span class="glyphicon glyphicon-trash"></span></a>
+								<a onClick="remove_mobile('<?=$invoice_value['ACCOUNT_NO'];?>','<?=$invoice_value['INVOICE_ID'];?>')"><span class="glyphicon glyphicon-trash"></span></a>
 							</div>
 						</td>
 					</tr>

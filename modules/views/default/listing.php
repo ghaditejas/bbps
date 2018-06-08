@@ -53,7 +53,7 @@
                        <?php }else{echo $data['invoice_amount'];}?></td>
 						<td class="action">
 							<div class="bbox">
-                            <?php if($data['PAYMENT_STATUS']=='success'){?>
+                            <?php if($data['PAYMENT_STATUS']=='success'|| $data['PAYMENT_STATUS']=='pending'){?>
                                 <a href="javascript:void(0)" id="<?php echo $data['INVOICE_ID'];?>" class="btn btn-primary col col-md-3" >PAID</a>
                             <?php } else if($data['recieved']==0){ ?>
                                 <a href="/partnerpay/web/bbps/default/payment?invoice_id=<?php echo $data['INVOICE_ID']; ?>" id="<?php echo $data['INVOICE_ID'];?>" class="btn btn-primary col col-md-3">Pay Now</a>
@@ -121,8 +121,7 @@
 			<tr>
 				<th class="text-center idnum">#</th>
 				<th class="text-center idnum"><input type="checkbox" id="select_all" class="checkbox-inline">Select all</th>
-				<th class="text-center">Mobile Number</th>
-				<th class="text-center">Issue Date</th>
+				<th class="text-center">Account Number</th>
 				<th class="text-center">Due Date</th>
 				<th class="text-center">Total Amount</th>
 				<th class="text-center">Payment</th>
@@ -143,7 +142,6 @@
 						<td class="idnum">1</td>
 						<td><input type="checkbox" class="checkbox-inline"></td>
 						<td>9876543210</td>
-						<td>23-03-2018</td>
 						<td>31-03-2018</td>
 						<td class="text-right">Rs 18,000.00</td>
 						<td><a href="#" target="_blank" class="btn btn-primary">Pay Now</a></td>
@@ -207,7 +205,6 @@
 		 $('.checkbox').prop('checked',$(this).prop('checked'));
 	 });
 	 $('body').on('click', 'input.checkbox:checkbox', function() {
-		 console.log('asd');
 		if (!this.checked) {
             $("#select_all").prop('checked', false);
          }
@@ -263,10 +260,9 @@ function getRecords(){
 				$.each(data, function (key, value) {
                     var remove_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td>'+
 						'<td><input type="checkbox" name="checkbox_bill[]" class="checkbox" value="'+value.PROVIDER_BILL_DETAILS_ID+'" class="checkbox-inline"></td>'+
-						'<td>'+value.MOBILE_NO+'</td>'+
-						'<td>'+value.ISSUE_DATE+'</td>'+
+						'<td>'+value.ACCOUNT_NO+'</td>'+
 						'<td>'+value.DUE_DATE+'</td>'+
-						'<td class="text-right">'+value.NET_AMOUNT+'</td>'+
+						'<td class="text-right">'+value.AMOUNT+'</td>'+
 						'<td><a href="javascript:void(0)" onClick="pay()" class="btn btn-primary">Pay Now</a></td></tr>';
                     $('#removed_data tbody').append(remove_data);
              	});

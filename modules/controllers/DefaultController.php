@@ -93,20 +93,12 @@ class DefaultController extends HController
             $bill_details[]=$data;
           }
           $template="data_uploaded";
-          // return $this->render('data_uploaded',array('invoice_id'=>$invoice_id));
         } else{
           echo "Error while uploading file";
         }
       } else {
-        // $email = '';
         // $validator = new RequiredValidator();
-        
         // if ($validator->validate($email, $error)) {
-          //   echo 'Email is valid.';
-          // } else {
-            //   echo $error;
-            // }
-            // exit;
             if(Yii::$app->request->post('register')){
               $ref_no=$this->archieve_data();
             }
@@ -123,7 +115,6 @@ class DefaultController extends HController
             $this->bill_details(0,$invoice_id,$data);
             $bill_details[]=$data;
             $template="loading";
-            // return $this->render('loading',array('invoice_id'=>$invoice_id));
           }
           $data=Yii::$app->user->identity;
           $connection = Yii::$app->db;
@@ -373,13 +364,7 @@ class DefaultController extends HController
           public function calculate_sum($data){
             $sum=0;
             foreach($data as $value){
-            //   if(strtotime("now")>strtotime($value['DUE_DATE'])){
-            //     $sum = $sum + $value['NET_AMOUNT'] + $value['LATE_FEE'];
-            //   } else if(strtotime("now")<strtotime($value['EARLY_DUE_DATE'])) {
-            //     $sum = $sum + $value['NET_AMOUNT'] - $value['EARLY_DISCOUNT'];
-            //   }else{
                 $sum = $sum + $value['AMOUNT'];
-              // }
             }
             return $sum;
           }
@@ -387,11 +372,11 @@ class DefaultController extends HController
           public function actionDeletemobile(){
             $connection = Yii::$app->db;
             $invoice_mobile_delete = $connection->createCommand()
-            ->update('tbl_provider_bill_details', ['REMOVED' => 'y'], 'INVOICE_ID='.Yii::$app->request->post('invoice_id').' AND MOBILE_NO='.Yii::$app->request->post('mobile_no'))->execute();
+            ->update('tbl_provider_bill_details', ['REMOVED' => 'y'], 'INVOICE_ID='.Yii::$app->request->post('invoice_id').' AND ACCOUNT_NO='.Yii::$app->request->post('mobile_no'))->execute();
             echo $invoice_data;
             if($invoice_mobile_delete){
               $invoice = $connection
-              ->createCommand("Select b.NET_AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.ISSUE_DATE,b.INVOICE_ID,b.DUE_DATE,b.EARLY_DUE_DATE,b.EARLY_DISCOUNT,b.LATE_FEE,b.MOBILE_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
+              ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
               $invoice->bindValue(':invoice_id', Yii::$app->request->post('invoice_id'));
               $invoice_data = $invoice->queryAll();
               $sum = $this->calculate_sum($invoice_data);
@@ -404,7 +389,7 @@ class DefaultController extends HController
           public function actionRemoved(){
             $data=Yii::$app->user->identity;
             $connection = Yii::$app->db;
-            $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.NET_AMOUNT,b.PROVIDER_ID,p.provider_name,DATE_FORMAT(b.ISSUE_DATE,'%d/%m/%Y') as ISSUE_DATE,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.EARLY_DUE_DATE,b.EARLY_DISCOUNT,b.LATE_FEE,b.MOBILE_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.UTILITY_ID=:utility_id AND b.REMOVED='y' AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id";
+            $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.UTILITY_ID=:utility_id AND b.REMOVED='y' AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id";
             $removed = $connection->createCommand($query);
             $removed->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
             $removed->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
@@ -422,7 +407,8 @@ class DefaultController extends HController
             $config->bindValue(':partner_id',$data['PARTNER_ID']);
             $config_data = $config->queryAll();
             $chk = new Checksum();
-            $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+            // $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+            $privatekey ='2bc541008972c2e0b8206f0c25e0b1171adf745ca9bb2ec16bc19a5e6ce1f955';
             $buyerEmail = trim($data['EMAIL']);
             $buyerPhone = trim("9869478152");
             $buyerFirstName = trim($data['FIRST_NAME']);
@@ -467,29 +453,20 @@ class DefaultController extends HController
                 // 'utitlity_id'=>$invoice_data[0]['UTILITY_ID'],
                 // 'provider_id'=>$invoice_data[0]['PROVIDER_ID'],
                 'private_key'=>'',
-                'callbackurl'=>'',
+                'mercid'=>245,
+                'callbackurl'=>'192.168.1.184/partnerpay/web/bbps/default/paymentstatus',
                 'checkSum'=>'',
                 'airpay_id'=>Yii::$app->request->post('APTRANSACTIONID'),
                 'amountsum'=>$_POST['AMOUNT'],
                 'payment_data'=>$bill_details,
               ];
               echo"<pre>";
-              $api_data = json_encode($api_data));
+              $api_data = json_encode($apidata);
               $url='https://devel-payments.airpayme.com/bbps/makePayment.php';
               $response= $this->api_call($url,$api_data);
-              print_r($response);
-              exit;
-              //  $curl = curl_init('192.168.1.127/partnerpay/web/bbps/default/paymentstatus');
-              // curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
-              // curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
-              // curl_setopt($curl, CURLOPT_POST, true);
-              // curl_setopt($ch, CURLOPT_POSTFIELDS, $api_data);
-              // $curl_response = curl_exec($curl);
-              // curl_close($curl); 
-              // print_r($output);
-              // exit;
               return $this->render('thankyou');
             }else{
+              $response = "PAYMENT FAILED";
               return $this->render('error'); 
             }
             

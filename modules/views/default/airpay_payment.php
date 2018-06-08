@@ -13,9 +13,9 @@
 		    <td align="center" valign="middle">
             <?php $data=Yii::$app->user->identity;
                 ?>
-			    <form action="https://payments.airpay.co.in/pay/index.php" method="post" id="airpay_form">
+			    <form action="https://devel-payments.airpayme.com/pay/index.php" method="post" id="airpay_form">
                     <input type="hidden" name="privatekey" value="<?php echo $key; ?>">
-                    <input type="hidden" name="mercid" value="<?php echo $mechant_id; ?>">
+                    <input type="hidden" name="mercid" value="<?php echo "243"; ?>">
 				    <input type="hidden" name="orderid" value="<?php echo $payment_data['invoice_no']; ?>">
                     <input type="hidden" name="amount" value="<?php echo $payment_data['invoice_amount']; ?>">
                     <input type="hidden" name="buyerEmail" value="<?php echo $data['EMAIL']; ?>">
