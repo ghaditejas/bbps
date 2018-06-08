@@ -298,10 +298,10 @@ class DefaultController extends HController
             echo $data;
             exit;
             $model= new TblProviderBillDetails();
-            foreach($data2->BankResponse as $value){
+            foreach($data2->Resp_Data as $value){
               $connection = Yii::$app->db;  
               $connection->createCommand()
-              ->update('tbl_registered_account', ['REF_NO'=>$value->Register_no,'IS_REGISTERED'=>1], 'ACCOUNT_NO='.$value->billnumber.' AND PROVIDER_ID='.$data2->Invoice_no)
+              ->update('tbl_registered_account', ['REF_NO'=>$value->registerid,'IS_REGISTERED'=>1], 'ACCOUNT_NO='.$value->billeraccountid.' AND PROVIDER_ID='.$data2->Invoice_no)
               ->execute();
             }
           }
@@ -322,12 +322,10 @@ class DefaultController extends HController
             $post = Yii::$app->request->rawBody;
             $data2 = json_decode($post);
             $model= new TblProviderBillDetails();
-            foreach($data2->BankResponse as $value){
               $connection = Yii::$app->db;  
               $connection->createCommand()
-              ->update('tbl_provider_bill_details', ['ISSUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->validation_date)),'DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->billduedate)),'EARLY_DISCOUNT'=>$value->early_billdiscount,'LATE_FEE'=>$value->late_payment_charges,'EARLY_DUE_DATE'=>date('Y-m-d H:i:s',strtotime($value->early_billduedate)),'NET_AMOUNT'=>$value->net_billamount,'AMOUNT'=>$value->billamount,'REF_NO'=>$value->validationid,'RESPONSE_NOT_RECIEVED'=>0], 'MOBILE_NO='.$value->billnumber.' AND INVOICE_ID='.$data2->Invoice_no)
+              ->update('tbl_provider_bill_details', ['DUE_DATE'=>date('Y-m-d H:i:s',strtotime($data2->billduedate)),'AMOUNT'=>$data2->billamount,'REF_NO'=>$data2->registerid,'BANK_BILL_ID'=>$data2->bankbillid,'BILL_NUMBER'=>$data2->billnumber,'BILL_ID'=>$data2->billid,'RESPONSE_NOT_RECIEVED'=>0], 'ACCOUNT_NO='.$data2->accountid.' AND INVOICE_ID='.$data2->requestnumber)
               ->execute();
-            }
             $msg=$this->notification($data2->Invoice_no);
             if(isset($msg)){
               return Yii::$app->response->statusCode = 200;
@@ -340,7 +338,7 @@ class DefaultController extends HController
             $data=Yii::$app->user->identity;
             $connection = Yii::$app->db;
             $all_invoice = $connection
-            ->createCommand('Select SUM(b.NET_AMOUNT) as invoice_amount,SUM(b.RESPONSE_NOT_RECIEVED) as recieved,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.INVOICE_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.USER_ID=:userid AND b.REMOVED="n" GROUP BY INVOICE_ID Order By INVOICE_ID DESC');
+            ->createCommand('Select SUM(AMOUNT) as invoice_amount,SUM(b.RESPONSE_NOT_RECIEVED) as recieved,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.INVOICE_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.USER_ID=:userid AND b.REMOVED="n" GROUP BY INVOICE_ID Order By INVOICE_ID DESC');
             $all_invoice->bindValue(':userid', $data['USER_ID']);
             $all_invoice_data = $all_invoice->queryAll();
             $query="SELECT utility_id,utility_name from tbl_utility where is_disabled='n'";
@@ -365,7 +363,7 @@ class DefaultController extends HController
           public function actionPayment($invoice_id){
             $connection = Yii::$app->db;
             $invoice = $connection
-            ->createCommand("Select b.NET_AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.ISSUE_DATE,b.INVOICE_ID,b.DUE_DATE,b.EARLY_DUE_DATE,b.EARLY_DISCOUNT,b.LATE_FEE,b.MOBILE_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
+            ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
             $invoice->bindValue(':invoice_id', $invoice_id);
             $invoice_data = $invoice->queryAll();
             $sum = $this->calculate_sum($invoice_data);
@@ -375,13 +373,13 @@ class DefaultController extends HController
           public function calculate_sum($data){
             $sum=0;
             foreach($data as $value){
-              if(strtotime("now")>strtotime($value['DUE_DATE'])){
-                $sum = $sum + $value['NET_AMOUNT'] + $value['LATE_FEE'];
-              } else if(strtotime("now")<strtotime($value['EARLY_DUE_DATE'])) {
-                $sum = $sum + $value['NET_AMOUNT'] - $value['EARLY_DISCOUNT'];
-              }else{
-                $sum = $sum + $value['NET_AMOUNT'];
-              }
+            //   if(strtotime("now")>strtotime($value['DUE_DATE'])){
+            //     $sum = $sum + $value['NET_AMOUNT'] + $value['LATE_FEE'];
+            //   } else if(strtotime("now")<strtotime($value['EARLY_DUE_DATE'])) {
+            //     $sum = $sum + $value['NET_AMOUNT'] - $value['EARLY_DISCOUNT'];
+            //   }else{
+                $sum = $sum + $value['AMOUNT'];
+              // }
             }
             return $sum;
           }
@@ -452,31 +450,34 @@ class DefaultController extends HController
             if($_POST['TRANSACTIONPAYMENTSTATUS']=='SUCCESS'){
               $connection = Yii::$app->db;
               $invoice = $connection
-              ->createCommand("SELECT NET_AMOUNT,RESPONSE_NOT_RECIEVED,PROVIDER_ID,UTILITY_ID,ISSUE_DATE,INVOICE_ID,DUE_DATE,EARLY_DUE_DATE,EARLY_DISCOUNT,LATE_FEE,MOBILE_NO from tbl_provider_bill_details WHERE INVOICE_ID=:invoice_id AND REMOVED='n'");
+              ->createCommand("SELECT AMOUNT,BILL_ID,RESPONSE_NOT_RECIEVED,PROVIDER_ID,UTILITY_ID,INVOICE_ID,DUE_DATE,ACCOUNT_NO from tbl_provider_bill_details WHERE INVOICE_ID=:invoice_id AND REMOVED='n'");
               $invoice->bindValue(':invoice_id', $_POST['TRANSACTIONID']);
               $invoice_data = $invoice->queryAll();
               $bill_details=array();
               foreach($invoice_data as $value){
-                $status= $connection->createCommand()->update('tbl_provider_bill_details', ['PAYMENT_STATUS' => 'pending'], 'INVOICE_ID='.$_POST['TRANSACTIONID'].' AND MOBILE_NO='.$value['MOBILE_NO'])->execute();
-                $data['account_id']=$value['MOBILE_NO'];
-                $data['ref_no']=$value['REF_NO'];
+                $status= $connection->createCommand()->update('tbl_provider_bill_details', ['PAYMENT_STATUS' => 'pending'], 'INVOICE_ID='.$_POST['TRANSACTIONID'].' AND ACCOUNT_NO='.$value['ACCOUNT_NO'])->execute();
+                $data['viewbillresponseid']=$value['BILL_ID'];
                 $sum=array($value);
                 $data['amount']=$this->calculate_sum($sum);
                 $bill_details[]=$data;
               }
-              $api_data=[
-                'Invoice_no'=>Yii::$app->request->post('TRANSACTIONID'),
-                'profile_id'=>'',
-                'utitlity_id'=>$invoice_data[0]['UTILITY_ID'],
-                'provider_id'=>$invoice_data[0]['PROVIDER_ID'],
+              $apidata=[
+                // 'Invoice_no'=>Yii::$app->request->post('TRANSACTIONID'),
+                // 'profile_id'=>'',
+                // 'utitlity_id'=>$invoice_data[0]['UTILITY_ID'],
+                // 'provider_id'=>$invoice_data[0]['PROVIDER_ID'],
                 'private_key'=>'',
-                'retunr_url'=>'',
+                'callbackurl'=>'',
                 'checkSum'=>'',
                 'airpay_id'=>Yii::$app->request->post('APTRANSACTIONID'),
+                'amountsum'=>$_POST['AMOUNT'],
                 'payment_data'=>$bill_details,
               ];
               echo"<pre>";
-              print_r(json_encode($api_data));
+              $api_data = json_encode($api_data));
+              $url='https://devel-payments.airpayme.com/bbps/makePayment.php';
+              $response= $this->api_call($url,$api_data);
+              print_r($response);
               exit;
               //  $curl = curl_init('192.168.1.127/partnerpay/web/bbps/default/paymentstatus');
               // curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
