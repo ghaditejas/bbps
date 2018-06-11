@@ -49,11 +49,11 @@
                     <div class="row">
                         <input type="hidden" name="_csrf" value="<?=Yii::$app->request->getCsrfToken()?>" />
                         <div class="col-md-4 opclist-warp">
-                            <!-- <select class="opclist" id="providers">
+                            <!-- <select class="form-control" id="providers" name="providers" onChange="getFields()">
                                 <option value="">SELECT PROVIDER</option>
                             </select> -->
-                            <!-- <ul class="opclist" id="providers">
-                            </ul> -->
+                            <ul class="opclist" id="providers">
+                            </ul>
                         </div>
                         <div class="col-md-8 opclist-box">
                             <h4>Mobile Bill Payment</h4>
@@ -69,11 +69,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-sm-12 col-md-8"><div class="form-group">
+                            <!-- <div class="col-sm-12 col-md-8"><div class="form-group">
                             <select class="form-control" id="providers" name="providers" onChange="getFields()">
                                 <option value="">SELECT PROVIDER</option>
                             </select>
-                            </div></div>
+                            </div></div> -->
                             <div><input type="hidden" id="utility_name" name="utility_name" value=""></div>
                             <div class="row" id="bulk">
                                 <div class="col-sm-12 col-md-8">
@@ -158,11 +158,11 @@ function setUtility(id,name){
       dataType: "json",
       success: function(data) {
             $('#providers').empty();
-            console.log(data);
-            $('#providers').append('<option value="">SELECT PROVIDERS</option>');
+            // console.log(data);
+            // $('#providers').append('<option value="">SELECT PROVIDERS</option>');
            $.each(data, function (key, value) {
-                    // var provider_list='<li><label class="radio-inline"><input type="radio" name="providers" id="providers" value="'+value.id+'">'+value.name+'</label></li>';
-                    var provider_list='<option value="'+value.id+'">'+value.name+'</option>';
+                    var provider_list='<li><label class="radio-inline"><input type="radio" onClick="getFields()" name="providers" id="providers" value="'+value.id+'">'+value.name+'</label></li>';
+                    // var provider_list='<option value="'+value.id+'">'+value.name+'</option>';
                     $('#providers').append(provider_list);
              });
       }
@@ -170,7 +170,7 @@ function setUtility(id,name){
 }
 
 function getFields(){
-    var provider = $("#providers").val();
+    var provider = $("input[name=providers]").val();
     if(provider){
      $.ajax({
       url: "/partnerpay/web/bbps/default/get_fields",  
@@ -188,8 +188,8 @@ function getFields(){
                     },  
                     regex: new RegExp(value.validation),
                     messages: {
-                        required: "This Field is Required",
-                        regex: 'PLEASE PROVIDE PROPER INPUT'
+                        required: value.field+" is Required",
+                        regex: 'Please Provide Proper '+value.field,
                     }
                 });
             });

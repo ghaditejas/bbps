@@ -132,7 +132,7 @@ class DefaultController extends HController
             "customerid"=>1,
             // 'private_key'=>$privatekey,
             'private_key'=>'',
-            'callbackurl'=>'192.168.1.184/partnerpay/web/bbps/default/get_bill_response',
+            'callbackurl'=>'192.168.1.184/partnerpay/web/bbps/default/bill_data_response',
             "returnurl"=>'192.168.1.184/partnerpay/web/bbps/default/account_register_response',
             "action"=>"ADD_BILLER",
             'checkSum'=>"",
@@ -298,15 +298,15 @@ class DefaultController extends HController
           }
           
           public function actionBill_data_response(){
-            $data=Yii::$app->user->identity;
-            $connection = Yii::$app->db;
-            $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
-            $config = $connection
-            ->createCommand($query);
-            $config->bindValue(':partner_id',$data['PARTNER_ID']);
-            $config_data = $config->queryAll();
-            $chk = new Checksum();
-            $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+            // $data=Yii::$app->user->identity;
+            // $connection = Yii::$app->db;
+            // $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+            // $config = $connection
+            // ->createCommand($query);
+            // $config->bindValue(':partner_id',$data['PARTNER_ID']);
+            // $config_data = $config->queryAll();
+            // $chk = new Checksum();
+            // $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
             
             //   $this->enableCsrfValidation = false;
             //   echo "asdads";

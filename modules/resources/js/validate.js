@@ -1,11 +1,11 @@
-$.validator.addMethod('filesize', function () {
-    console.log($('input[name="bulk_upload"]')[0].files[0].size);
-    if($('input[name="bulk_upload"]')[0].files[0]){
-        return ($('input[name="bulk_upload"]')[0].files[0].size<= 1000)
-    } else {
-        return true;
-    }
-}, 'File size must be less than {0}');
+// $.validator.addMethod('filesize', function () {
+//     console.log($('input[name="bulk_upload"]').val());
+//     if($('input[name="bulk_upload"]').val()!=""){
+//         return ($('input[name="bulk_upload"]')[0].files[0].size<= 1000)
+//     } else {
+//         return true;
+//     }
+// }, 'File size must be less than {0}');
 $.validator.addMethod("regex",function(value, element, regexp) {
     // console.log('asdasd');
         var check = false;
@@ -32,19 +32,17 @@ $(document).ready(function () {
                    return valid; 
                 },
                 extension: "csv",
-                filesize: true,
                 
             },
             
         },
         messages: {
             providers: {
-                required: "This field is Required",
+                required: "Provider is Required",
             },
             bulk_upload: {
-                required: "This field is Required",
+                required: "Bulk Upload File is Required",
                 extension: "Invalid File Format",
-                filesize: "File size must be less than 124kb",
             },
         },
         submitHandler: function (form, event) {
