@@ -180,6 +180,7 @@ function getFields(){
       success: function(data) {
             $('#single').empty();
            $.each(data, function (key, value) {
+               console.log(value.validation);
                     var fields='<div class="col-sm-12 col-md-8"><div class="form-group"><input type="text" name="'+value.field+'" class="dynamic_field form-control" placeholder="Enter your '+value.field+'" value=""><span class="error"></span></div></div>';
                     $('#single').append(fields);
                  $('input[name="'+value.field+'"]').rules("add", { 

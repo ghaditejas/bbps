@@ -31,6 +31,21 @@ class DefaultController extends HController
       return $this->render('index',array('utilities'=>$utilities));
     }
     
+    public function writeLog($filepath, $mid, $data) {
+
+      $filename = $filepath . $mid . '.log';
+      if (!file_exists($filename)) 
+      {
+          echo $filename;
+          // create directory/folder uploads.
+          echo(mkdir($filename, 0777, true));
+          
+      }
+      echo $filename;
+      $log_file_data = $filename.'/log_' . date('d-M-Y') . '.log';
+      file_put_contents($log_file_data, $data ."\n", FILE_APPEND);
+  }
+
     public function actionProviders(){
       $id=Yii::$app->request->post('utility_id');
       if($id){
@@ -41,7 +56,7 @@ class DefaultController extends HController
         $providers_list=array();
         $provider_data=array();
         foreach($providers as $key=>$value){
-          $provider_data['id']=$value->provider_id;
+          $provider_data['id']=$value->BILLER_MASTER_ID;
           $provider_data['name']=$value->provider_name;
           $providers_list[]=$provider_data;
         }
@@ -128,7 +143,7 @@ class DefaultController extends HController
           $apidata=[
             "requestid"=>$invoice_id,
             // 'mercid'=>$config_data[0]['AIRPAY_MERCHANT_ID'],
-            'mercid'=>245,
+            'mercid'=>243,
             "customerid"=>1,
             // 'private_key'=>$privatekey,
             'private_key'=>'',
@@ -141,9 +156,10 @@ class DefaultController extends HController
           // echo "<pre>";
           $api_data = json_encode($apidata);
           $url='https://devel-payments.airpayme.com/bbps/add_biller.php';
+          $log_path=realpath(Yii::$app->basePath)."/modules/resources/log/";
           $response= $this->api_call($url,$api_data);
-          print_r($response);
-          exit;
+          $log_data="ADD BILLER API RESPONSE : ".json_encode($response);
+          $this->writeLog($log_path,"Log_Data",$log_data);
           if($response->STATUS=="200"){
             return $this->render($template,array('invoice_id'=>$invoice_id));
           } else {
@@ -275,25 +291,22 @@ class DefaultController extends HController
         public function actionAccount_register_response(){
           $post = Yii::$app->request->rawBody;
           $data2 = json_decode($post);
-          $log_filename = "/partnerpay/modules/resources/log/checklog";
-          // if (!file_exists($log_filename)) 
-          // {
-            //     // create directory/folder uploads.
-            //     mkdir($log_filename, 0777, true);
-            // }
-            // $log_file_data = $log_filename.'/log_' . date('d-M-Y') . '.log';
-            file_put_contents('/partnerpay/modules/resources/log/log2.txt', print_r($data2), FILE_APPEND);
-            $myfile = fopen("/partnerpay/modules/resources/log/log2.txt", "r");
-            $data = fread($myfile,filesize("/partnerpay/modules/resources/log/log2.txt"));
-            fclose($myfile);
-            echo $data;
-            exit;
+          $log_path = realpath(Yii::$app->basePath)."/modules/resources/log/";
+          $log_data = " REGISTER DATA RESPONSE : ".$post;
+          $this->writeLog($log_path,"Log_Data",$log_data);
             $model= new TblProviderBillDetails();
-            foreach($data2->Resp_Data as $value){
               $connection = Yii::$app->db;  
-              $connection->createCommand()
-              ->update('tbl_registered_account', ['REF_NO'=>$value->registerid,'IS_REGISTERED'=>1], 'ACCOUNT_NO='.$value->billeraccountid.' AND PROVIDER_ID='.$data2->Invoice_no)
+              $get_provider = $connection->createCommand('Select PROVIDER_ID from tbl_provider_bill_details where ACCOUNT_NO=:account_no AND INVOICE_ID=:invoice_no');
+              $get_provider->bindValue(':account_no',$data2->ACCOUNTID);
+              $get_provider->bindValue(':invoice_no',$data2->REQUESTNUMBER);
+              $get_provider_data =  $get_provider->queryAll();
+              $status = $connection->createCommand()
+              ->update('tbl_registered_account', ['REF_NO'=>$data2->BILLERACCOUNTID,'IS_REGISTERED'=>1], 'ACCOUNT_NO='.$data2->ACCOUNTID.' AND PROVIDE_ID='.$get_provider_data[0]['PROVIDER_ID'])
               ->execute();
+            if($status){
+              return json_encode(['status'=>200,"message"=>"UPLOADED SUCCESSFULLY"]);
+            } else {
+              return json_encode(['status'=>400,"message"=>"ERROR IN UPLOADINf"]);
             }
           }
           
@@ -310,18 +323,21 @@ class DefaultController extends HController
             
             //   $this->enableCsrfValidation = false;
             //   echo "asdads";
+            $log_path = realpath(Yii::$app->basePath)."/modules/resources/log/";
             $post = Yii::$app->request->rawBody;
+            $log_data = "Bill DATA RESPONSE : ".$post;
+            $this->writeLog($log_path,"Log_Data",$log_data);
             $data2 = json_decode($post);
             $model= new TblProviderBillDetails();
               $connection = Yii::$app->db;  
               $connection->createCommand()
-              ->update('tbl_provider_bill_details', ['DUE_DATE'=>date('Y-m-d H:i:s',strtotime($data2->billduedate)),'AMOUNT'=>$data2->billamount,'REF_NO'=>$data2->registerid,'BANK_BILL_ID'=>$data2->bankbillid,'BILL_NUMBER'=>$data2->billnumber,'BILL_ID'=>$data2->billid,'RESPONSE_NOT_RECIEVED'=>0], 'ACCOUNT_NO='.$data2->accountid.' AND INVOICE_ID='.$data2->requestnumber)
+              ->update('tbl_provider_bill_details', ['DUE_DATE'=>date('Y-m-d H:i:s',strtotime($data2->BILLDUEDATE)),'AMOUNT'=>$data2->BILLAMOUNT,'REF_NO'=>$data2->REGISTERID,'BANK_BILL_ID'=>$data2->BILLID,'BILL_NUMBER'=>$data2->BILLNUMBER,'BILL_ID'=>$data2->BILLRSPID,'RESPONSE_NOT_RECIEVED'=>0], 'ACCOUNT_NO='.$data2->ACCOUNTID.' AND INVOICE_ID='.$data2->REQUESTNUMBER)
               ->execute();
             $msg=$this->notification($data2->Invoice_no);
             if(isset($msg)){
-              return Yii::$app->response->statusCode = 200;
+              return json_encode(['status'=>200,"message"=>"UPLOADED SUCCESSFULLY"]);
             } else {
-              return Yii::$app->response->statusCode = 401;
+              return json_encode(['status'=>400,"message"=>"ERROR IN UPLOADING"]);
             }
           }
           
@@ -329,7 +345,7 @@ class DefaultController extends HController
             $data=Yii::$app->user->identity;
             $connection = Yii::$app->db;
             $all_invoice = $connection
-            ->createCommand('Select SUM(AMOUNT) as invoice_amount,SUM(b.RESPONSE_NOT_RECIEVED) as recieved,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.INVOICE_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.USER_ID=:userid AND b.REMOVED="n" GROUP BY INVOICE_ID Order By INVOICE_ID DESC');
+            ->createCommand('Select SUM(AMOUNT) as invoice_amount,SUM(b.RESPONSE_NOT_RECIEVED) as recieved,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.INVOICE_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.USER_ID=:userid AND b.REMOVED="n" GROUP BY INVOICE_ID Order By INVOICE_ID DESC');
             $all_invoice->bindValue(':userid', $data['USER_ID']);
             $all_invoice_data = $all_invoice->queryAll();
             $query="SELECT utility_id,utility_name from tbl_utility where is_disabled='n'";
@@ -341,7 +357,7 @@ class DefaultController extends HController
           public function actionChecking(){
             $connection = Yii::$app->db;
             $checkresponse = $connection
-            ->createCommand("Select SUM(NET_AMOUNT) as invoice_amount,SUM(RESPONSE_NOT_RECIEVED) as recieved from  tbl_provider_bill_details where INVOICE_ID=:invoice_id");
+            ->createCommand("Select SUM(AMOUNT) as invoice_amount,SUM(RESPONSE_NOT_RECIEVED) as recieved from  tbl_provider_bill_details where INVOICE_ID=:invoice_id");
             $checkresponse->bindValue(':invoice_id', Yii::$app->request->post('id'));
             $checkresponse_data = $checkresponse->queryAll();
             if($checkresponse_data[0]['recieved']==0){
@@ -408,7 +424,7 @@ class DefaultController extends HController
             $config_data = $config->queryAll();
             $chk = new Checksum();
             // $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-            $privatekey ='2bc541008972c2e0b8206f0c25e0b1171adf745ca9bb2ec16bc19a5e6ce1f955';
+            $privatekey ='91e747ae8fd76152ddba23ae7547e614bdea61d6356a3db679380b1ec4a8b2da';
             $buyerEmail = trim($data['EMAIL']);
             $buyerPhone = trim("9869478152");
             $buyerFirstName = trim($data['FIRST_NAME']);
@@ -458,16 +474,18 @@ class DefaultController extends HController
                 'checkSum'=>'',
                 'airpay_id'=>Yii::$app->request->post('APTRANSACTIONID'),
                 'amountsum'=>$_POST['AMOUNT'],
-                'payment_data'=>$bill_details,
+                'makepaymentdata'=>$bill_details,
               ];
-              echo"<pre>";
               $api_data = json_encode($apidata);
               $url='https://devel-payments.airpayme.com/bbps/makePayment.php';
               $response= $this->api_call($url,$api_data);
+              $log_path = realpath(Yii::$app->basePath)."/modules/resources/log/";
+              $log_data = " MAKE PAYMENT DATA RESPONSE : ".json_encode($response);
+              $this->writeLog($log_path,"Log_Data",$log_data);
               return $this->render('thankyou');
             }else{
               $response = "PAYMENT FAILED";
-              return $this->render('error'); 
+              return $this->render('thankyou'); 
             }
             
           }
@@ -569,7 +587,7 @@ class DefaultController extends HController
             $curl_response = curl_exec($curl);
             curl_close($curl);
             print_r($curl_response);
-            exit;
+            // exit;
             return json_decode($curl_response,true);
           }
           
@@ -578,10 +596,10 @@ class DefaultController extends HController
               $provider_id=Yii::$app->request->post('provider_id');
             }
             $connection = Yii::$app->db;
-            $query="SELECT FIELDS ,VALIDATIONS from tbl_provider WHERE PROVIDER_ID=:provider_id";
+            $query="SELECT FIELDS ,VALIDATIONS from tbl_provider WHERE BILLER_MASTER_ID=:biller_master_id";
             $get_fields = $connection
             ->createCommand($query);
-            $get_fields->bindValue(':provider_id',$provider_id);
+            $get_fields->bindValue(':biller_master_id',$provider_id);
             $get_fields_data = $get_fields->queryAll();
             $fields= explode('|',$get_fields_data[0]['FIELDS']);
             if(Yii::$app->request->post('provider_id')){
