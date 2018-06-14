@@ -1,0 +1,21 @@
+{"private_key":"","mercid":245,"callbackurl":"192.168.1.184\/partnerpay\/web\/bbps\/default\/paymentstatus","checkSum":"","airpay_id":"214780","amountsum":"208.00","makepaymentdata":[{"viewbillresponseid":"23","amount":208}]}
+ MAKE PAYMENT DATA RESPONSE : {"200":"Data updated successfully"}
+
+asdasd ========
+{"private_key":"","mercid":245,"callbackurl":"192.168.1.184\/partnerpay\/web\/bbps\/default\/paymentstatus","checkSum":"","airpay_id":"214820","amountsum":"208.00","makepaymentdata":[{"viewbillresponseid":"24","amount":208}]}
+ MAKE PAYMENT DATA RESPONSE : {"200":"Data updated successfully"}
+
+ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Empty request id."}
+
+ 
+MAKE PAYMENT DATA RESPONSE : null
+
+ 
+MAKE PAYMENT DATA RESPONSE : null
+
+ MAKE PAYMENT DATA RESPONSE : null
+
+ MAKE PAYMENT DATA RESPONSE : null
+ MAKE PAYMENT DATA RESPONSE : 
+ MAKE PAYMENT DATA RESPONSE : {"MAKEPAYMENT_RES_ID":24,"MAKEPAYMENT_REQ_ID":25,"CUSTOMER_ID":"245","BILLERID":"AIRTMU","BILLERACCOUNTID":"ARPBLSE0000105","SHORTNAME":"Mobile","AUTHENTICATOR":"9029058651","BILLID":"ARPBJ0047","BILLDUEDATE":"20180617","BILLDATE":"20180617","BILLNUMBER":"ACVT1806130004","PAYMENTAMMOUNT":"208.00","BANKREFNUMBER":"1528974298","STATUS":"Y","TRANSACTIONID":"ARP25","CURRENTDATE":1528974519,"RECONSTATUS":"Y","VIEW_BILL_RSP_ID":24,"RETURNURL":"192.168.1.184\/partnerpay\/web\/bbps\/default\/paymentstatus"}
+ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Empty request id."}

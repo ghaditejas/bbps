@@ -56,7 +56,7 @@
                             <?php if($data['PAYMENT_STATUS']=='success'|| $data['PAYMENT_STATUS']=='pending'){?>
                                 <a href="javascript:void(0)" id="<?php echo $data['INVOICE_ID'];?>" class="btn btn-primary col col-md-3" >PAID</a>
                             <?php } else if($data['recieved']==0){ ?>
-                                <a href="/partnerpay/web/bbps/default/payment?invoice_id=<?php echo $data['INVOICE_ID']; ?>" id="<?php echo $data['INVOICE_ID'];?>" class="btn btn-primary col col-md-3">Pay Now</a>
+                                <a href="/partnerpay/web/bbps/default/payment?invoice_id=<?php echo $data['PROVIDER_BILL_DETAILS_ID']; ?>" id="<?php echo $data['INVOICE_ID'];?>" class="btn btn-primary col col-md-3">Pay Now</a>
                            <?php } else { ?>
                                 <a class="btn btn-primary col col-md-3" id="<?php echo $data['INVOICE_ID'];?>" disabled="true">Pay Now</a>
                             <?php } ?>
@@ -166,24 +166,24 @@
 <script type="text/javascript" src="/partnerpay/modules/resources/js/bootstrap.file-input.js"></script>
 
 <script>
-    function fetchdata(invoice_id,csrf_token){
-		if(invoice_id){
-            $.ajax({
-					type: "POST",
-      				url: "/partnerpay/web/bbps/default/checking",
-					data: {"id":invoice_id,"_csrf":csrf_token},
-					// data_json:
-      				success: function(data) {
-		  					if(data){
-								  $('#'+invoice_id).removeAttr('disabled');
-								  $("#"+invoice_id).attr("href", "/partnerpay/web/bbps/default/payment?invoice_id="+invoice_id);
-							} else {
-								setInterval(fetchdata(invoice_id,csrf_token),5000);
-							}
-	  					}
-            		 });
-			}
-        }
+    // function fetchdata(invoice_id,csrf_token){
+	// 	if(invoice_id){
+    //         $.ajax({
+	// 				type: "POST",
+    //   				url: "/partnerpay/web/bbps/default/checking",
+	// 				data: {"id":invoice_id,"_csrf":csrf_token},
+	// 				// data_json:
+    //   				success: function(data) {
+	// 	  					if(data){
+	// 							  $('#'+invoice_id).removeAttr('disabled');
+	// 							  $("#"+invoice_id).attr("href", "/partnerpay/web/bbps/default/payment?invoice_id="+invoice_id);
+	// 						} else {
+	// 							setInterval(fetchdata(invoice_id,csrf_token),5000);
+	// 						}
+	//   					}
+    //         		 });
+	// 		}
+    //     }
 
 
     $(document).ready(function(){
@@ -209,14 +209,14 @@
             $("#select_all").prop('checked', false);
          }
 	});
-	var check =parseInt(<?php echo $invoice_id?>);
-	if(check){
-	 var invoice_id= parseInt(<?php echo $invoice_id?>);
-	}else{
-		var invoice_id="";
-	}
-	 var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
-	 setInterval(fetchdata(invoice_id,csrf_token),5000);	
+	// var check =parseInt(<?php echo $invoice_id?>);
+	// if(check){
+	//  var invoice_id= parseInt(<?php echo $invoice_id?>);
+	// }else{
+	// 	var invoice_id="";
+	// }
+	//  var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
+	//  setInterval(fetchdata(invoice_id,csrf_token),5000);	
      });
 </script>
 <script>

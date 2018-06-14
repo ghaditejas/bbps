@@ -31,7 +31,7 @@ class TblInvoiceBillDetails extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['PROVIDER_BILL_DETAILS_ID', 'INVOICE_ID', 'INVOICE_GENERATED_DATE', 'PAYMENT_STATUS', 'MODIFIED_DATE'], 'required'],
+            [['PROVIDER_BILL_DETAILS_ID', 'INVOICE_GENERATED_DATE', 'PAYMENT_STATUS', 'MODIFIED_DATE'], 'required'],
             [['PROVIDER_BILL_DETAILS_ID', 'INVOICE_ID'], 'integer'],
             [['INVOICE_GENERATED_DATE', 'CREATED_DATE', 'MODIFIED_DATE'], 'safe'],
             [['PAYMENT_STATUS'], 'string'],
