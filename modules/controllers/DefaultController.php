@@ -98,7 +98,7 @@ class DefaultController extends HController
             $data['details'] = json_encode($fields_data);
             $data['billerid'] = Yii::$app->request->post('providers');
             $data['remark'] = Yii::$app->request->post('utility_name');
-            $data['request_id'] = $this->bill_details($uploadedFile_data,$data);
+            $data['requestid'] = $this->bill_details($uploadedFile_data,$data);
             $bill_details[]=$data;
           }
           $template="data_uploaded";
@@ -121,7 +121,7 @@ class DefaultController extends HController
           $data['details'] = json_encode($fields_data);
           $data['billerid'] = 1;
           $data['remark'] = Yii::$app->request->post('utility_name');
-          $data['request_id'] = $this->bill_details(0,$data);
+          $data['requestid'] = $this->bill_details(0,$data);
           $bill_details[]=$data;
           $template="data_uploaded";
         }
@@ -135,7 +135,6 @@ class DefaultController extends HController
         $chk = new Checksum();
         $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
         $apidata=[
-          // "requestid"=>$invoice_id,
           // 'mercid'=>$config_data[0]['AIRPAY_MERCHANT_ID'],
           'mercid'=>243,
           "customerid"=>1,
@@ -292,9 +291,9 @@ class DefaultController extends HController
         $this->writeLog($log_path,"Log_Data",$log_data);
         $model= new TblProviderBillDetails();
         $connection = Yii::$app->db;  
-        $get_provider = $connection->createCommand('Select PROVIDER_ID from tbl_provider_bill_details where ACCOUNT_NO=:account_no AND INVOICE_ID=:invoice_no');
+        $get_provider = $connection->createCommand('Select PROVIDER_ID from tbl_provider_bill_details where ACCOUNT_NO=:account_no AND PROVIDER_BILL_DETAILS_ID=:provider_bill_details_id');
         $get_provider->bindValue(':account_no',$data2->ACCOUNTID);
-        $get_provider->bindValue(':invoice_no',$data2->REQUESTNUMBER);
+        $get_provider->bindValue(':provider_bill_details_id',$data2->REQUESTNUMBER);
         $get_provider_data =  $get_provider->queryAll();
         $status = $connection->createCommand()
         ->update('tbl_registered_account', ['REF_NO'=>$data2->BILLERACCOUNTID,'IS_REGISTERED'=>1], 'ACCOUNT_NO='.$data2->ACCOUNTID.' AND PROVIDE_ID='.$get_provider_data[0]['PROVIDER_ID'])
@@ -341,7 +340,7 @@ class DefaultController extends HController
         $data=Yii::$app->user->identity;
         $connection = Yii::$app->db;
         $all_invoice = $connection
-        ->createCommand('Select AMOUNT as invoice_amount,b.RESPONSE_NOT_RECIEVED as recieved,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.USER_ID=:userid AND b.REMOVED="n"');
+        ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.USER_ID=:userid AND b.PAYMENT_STATUS!="" GROUP BY INVOICE_ID');
         $all_invoice->bindValue(':userid', $data['USER_ID']);
         $all_invoice_data = $all_invoice->queryAll();
         $query="SELECT utility_id,utility_name from tbl_utility where is_disabled='n'";
@@ -436,15 +435,16 @@ class DefaultController extends HController
       }
       
       public function actionPaymentresponse(){
-        $model= new TblTranscationDetails();
-        $model->INVOICE_ID=$_POST['TRANSACTIONID'];
-        $model->AIRPAY_ID=$_POST['APTRANSACTIONID'];
-        $model->PAYMENT_DATE=date('Y-m-d');
-        $model->TOTAL_AMOUNT= $_POST['AMOUNT'];
-        $model->FINAL_AMOUNT_RECIEVED=$_POST['AMOUNT'];
-        $model->PAYMENT_STATUS=$_POST['TRANSACTIONPAYMENTSTATUS'];
-        $model->PAYMENT_STATUS_CODE=$_POST['TRANSACTIONSTATUS'];
-        $model->PAY_METHOD= $_POST['TRANSACTIONTYPE'];
+        $model = new TblTranscationDetails();
+        $model->INVOICE_ID = $_POST['TRANSACTIONID'];
+        $model->AIRPAY_ID = $_POST['APTRANSACTIONID'];
+        $model->PAYMENT_DATE = date('Y-m-d');
+        $model->TOTAL_AMOUNT = $_POST['AMOUNT'];
+        $model->FINAL_AMOUNT_RECIEVED = $_POST['AMOUNT'];
+        $model->PAYMENT_STATUS = $_POST['TRANSACTIONPAYMENTSTATUS'];
+        $model->PAYMENT_STATUS_CODE = $_POST['TRANSACTIONSTATUS'];
+        $model->PAY_METHOD = $_POST['TRANSACTIONTYPE'];
+        $model->PAY_MODE = $_POST['CHMOD'];
         $model->UPDATED_ON= date('Y-m-d');
         $model->save();
         if($_POST['TRANSACTIONPAYMENTSTATUS']=='SUCCESS'){
@@ -491,34 +491,38 @@ class DefaultController extends HController
       
       public function actionPaymentstatus(){
         $post = Yii::$app->request->rawBody;
-        echo "RESULT:";
-        print_r($post);
         $log_path = realpath(Yii::$app->basePath)."/modules/resources/log/";
         $log_data = " MAKE PAYMENT DATA RESPONSE : ".$post;
         $this->writeLog($log_path,"Log_Data",$log_data);
-        exit;
-        if($post){
-          $data=Yii::$app->user->identity;
-          $connection = Yii::$app->db;
-          $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
-          $config = $connection
-          ->createCommand($query);
-          $config->bindValue(':partner_id',$data['PARTNER_ID']);
-          $config_data = $config->queryAll();
-          $chk = new Checksum();
-          $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-          if(false){
-            return Yii::$app->response->statusCode = 401;
+        $data2 = json_decode($post);
+        // exit;
+        // if($post){
+        //   $data=Yii::$app->user->identity;
+        //   $connection = Yii::$app->db;
+        //   $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+        //   $config = $connection
+        //   ->createCommand($query);
+        //   $config->bindValue(':partner_id',$data['PARTNER_ID']);
+        //   $config_data = $config->queryAll();
+        //   $chk = new Checksum();
+        //   $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+        //   if(false){
+        //     return Yii::$app->response->statusCode = 401;
+        //   } else {
+        //     foreach($post->BankResponse as $value){
+          if($data2->STATUS == 'Y'){
+              $status = "success";
           } else {
-            foreach($post->BankResponse as $value){
+             $status = "fail";
+          }
               $connection = Yii::$app->db;  
               $connection->createCommand()
-              ->update('tbl_provider_bill_details', ['PAYMENT_STATUS'=>$value['status']], 'MOBILE_NO='.$value->billnumber.' AND INVOICE_ID='.$post->Invoice_no)
+              ->update('tbl_provider_bill_details', ['PAYMENT_STATUS'=>$status,'BANK_REF_PAYMENT_NUMBER'=>$data2->BANKREFNUMBER], 'ACCOUNT_NO='.$data2->AUTHENTICATOR.' AND BILL_ID='.$data2->VIEW_BILL_RSP_ID)
               ->execute();
-            }
-            return Yii::$app->response->statusCode = 200;
-          }
-        }
+            
+      //       return Yii::$app->response->statusCode = 200;
+      //     }
+      //   }
       }
       
       public function actionAdd_mobile(){
@@ -713,5 +717,23 @@ class DefaultController extends HController
          
        } */
 
+       public function actionMpdf() {
+        $content = $this->renderPartial('receipt-bbps');
+        $pdf = new \kartik\mpdf\Pdf([
+            'mode' => \kartik\mpdf\Pdf::MODE_UTF8, // leaner size using standard fonts
+            'content' => $content,
+        'cssFile' => '@vendor/kartik-v/yii2-mpdf/assets/kv-mpdf-bootstrap.min.css',
+        'cssInline' => '.kv-heading-1{font-size:18px}',
+            'options' => [
+                'title' => 'Factuur',
+                'subject' => 'Generating PDF files via yii2-mpdf extension has never been easy'
+            ],
+            'methods' => [
+                'SetHeader' => ['Generated By: Krajee Pdf Component||Generated On: ' . date("r")],
+                'SetFooter' => ['|Page {PAGENO}|'],
+            ]
+        ]);
+        return $pdf->render();
+    }
       }
       

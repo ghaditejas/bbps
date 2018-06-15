@@ -35,7 +35,7 @@ class TblTranscationDetails extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['INVOICE_ID', 'AIRPAY_ID', 'PAYMENT_DATE', 'TOTAL_AMOUNT', 'FINAL_AMOUNT_RECIEVED', 'PAYMENT_STATUS', 'PAYMENT_STATUS_CODE', 'PAY_METHOD', 'UPDATED_ON'], 'required'],
+            [['INVOICE_ID', 'AIRPAY_ID', 'PAYMENT_DATE', 'TOTAL_AMOUNT', 'FINAL_AMOUNT_RECIEVED', 'PAYMENT_STATUS', 'PAYMENT_STATUS_CODE', 'PAY_METHOD', 'PAY_MODE' , 'UPDATED_ON'], 'required'],
             [['INVOICE_ID', 'AIRPAY_ID', 'PAYMENT_STATUS_CODE'], 'integer'],
             [['PAYMENT_DATE', 'CREATED_ON', 'UPDATED_ON'], 'safe'],
             [['TOTAL_AMOUNT', 'FINAL_AMOUNT_RECIEVED'], 'number'],
@@ -60,6 +60,7 @@ class TblTranscationDetails extends \yii\db\ActiveRecord
             'PAY_METHOD' => 'Pay  Method',
             'CREATED_ON' => 'Created  On',
             'UPDATED_ON' => 'Updated  On',
+            'PAY_MODE' => 'pay mode';
         ];
     }
 }

@@ -12,7 +12,7 @@
 	
 	<ul class="nav nav-tabs" role="tablist">
 		<li role="presentation" class="active"><a href="#alllist" aria-controls="alllist" role="tab" data-toggle="tab">All Invoice list</a></li>
-		<li role="presentation"><a href="#dislist" aria-controls="dislist" role="tab" data-toggle="tab">Remover list</a></li>
+		<li role="presentation"><a href="#dislist" aria-controls="dislist" role="tab" data-toggle="tab">Unpaid bill list</a></li>
 	</ul>
 	
 	<div class="tab-content">
@@ -53,15 +53,7 @@
                        <?php }else{echo $data['invoice_amount'];}?></td>
 						<td class="action">
 							<div class="bbox">
-                            <?php if($data['PAYMENT_STATUS']=='success'|| $data['PAYMENT_STATUS']=='pending'){?>
-                                <a href="javascript:void(0)" id="<?php echo $data['INVOICE_ID'];?>" class="btn btn-primary col col-md-3" >PAID</a>
-                            <?php } else if($data['recieved']==0){ ?>
-                                <a href="/partnerpay/web/bbps/default/payment?invoice_id=<?php echo $data['PROVIDER_BILL_DETAILS_ID']; ?>" id="<?php echo $data['INVOICE_ID'];?>" class="btn btn-primary col col-md-3">Pay Now</a>
-                           <?php } else { ?>
-                                <a class="btn btn-primary col col-md-3" id="<?php echo $data['INVOICE_ID'];?>" disabled="true">Pay Now</a>
-                            <?php } ?>
-                                <a href="javascript:void(0)" style="margin-left:25px" onClick="getDetails('<?php echo $data['INVOICE_ID'];?>')" class="btn btn-primary col col-md-3" >DETAILS</a>
-								<a href="javascript:void(0)" class="col col-md-3"><span class="glyphicon glyphicon-trash"></span></a>
+                            <a href="javascript:void(0)" style="margin-left:25px" onClick="getDetails('<?php echo $data['INVOICE_ID'];?>')" class="btn btn-primary col col-md-3" >DETAILS</a>
 							</div>
 						</td>
 					</tr> 
@@ -138,14 +130,6 @@
 			</thead>
 			
 			<tbody>
-					<tr>
-						<td class="idnum">1</td>
-						<td><input type="checkbox" class="checkbox-inline"></td>
-						<td>9876543210</td>
-						<td>31-03-2018</td>
-						<td class="text-right">Rs 18,000.00</td>
-						<td><a href="#" target="_blank" class="btn btn-primary">Pay Now</a></td>
-					</tr>
 			</tbody>
 
 			
@@ -194,13 +178,6 @@
         "ordering": false,
         "lengthMenu": [2, 5, 10, 25, 50, 75, 100],
 	 });
-	 $("#removed_data").DataTable({
-        "paging": true,
-        "searching": true,
-        'autowidth': true,
-        "ordering": false,
-        "lengthMenu": [2, 5, 10, 25, 50, 75, 100],
-     });
 	 $('#select_all').click(function(){
 		 $('.checkbox').prop('checked',$(this).prop('checked'));
 	 });
@@ -256,6 +233,9 @@ function getRecords(){
       		dataType: "json",
       		success: function(data) {
 				  $('#removed').removeClass('hidden');
+				  if($.fn.DataTable.isDataTable( '#removed_data' )){
+				  	$("#removed_data").DataTable().destroy();
+				  }
 				  $('#removed_data tbody').empty();
 				$.each(data, function (key, value) {
                     var remove_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td>'+
@@ -266,6 +246,17 @@ function getRecords(){
 						'<td><a href="javascript:void(0)" onClick="pay()" class="btn btn-primary">Pay Now</a></td></tr>';
                     $('#removed_data tbody').append(remove_data);
              	});
+				 $("#removed_data").DataTable({
+    				    "paging": true,
+        				"searching": true,
+        				'autowidth': true,
+        				"ordering": false,
+        				"lengthMenu": [2, 5, 10, 25, 50, 75, 100],
+						"buttons": [
+        						'selectAll',
+        						'selectNone'
+    							],
+     				});
 			}
    		})
 }
