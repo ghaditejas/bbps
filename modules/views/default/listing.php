@@ -42,18 +42,17 @@
 			
 			<tbody>
                 <?php $i=1; foreach($invoice_data as $data){?>
+					
 					<tr>
 						<td class="idnum"><?=$i;?></td>
 						<td><?php echo $data['provider_name'];?></td>
                         <td><?php echo $data['utility_name'];?></td>
-						<!-- <td>23-03-2018</td>
-						<td>31-03-2018</td> -->
 						<td class="text-right" id="amount_<?=$data['INVOICE_ID']?>"><?php if($data['invoice_amount']==0){?>
                             -
                        <?php }else{echo $data['invoice_amount'];}?></td>
 						<td class="action">
 							<div class="bbox">
-                            <a href="javascript:void(0)" style="margin-left:25px" onClick="getDetails('<?php echo $data['INVOICE_ID'];?>')" class="btn btn-primary col col-md-3" >DETAILS</a>
+                            <a href="#listing" style="margin-left:25px" data-toggle="modal" onClick="getDetails('<?php echo $data['INVOICE_ID'];?>')" class="btn btn-primary" >DETAILS</a>
 							</div>
 						</td>
 					</tr> 
@@ -145,6 +144,47 @@
 			</div>
 		</div><!-- .tab-content close -->
 	</div><!-- .tab-content close -->	
+	<div class="modal fade" id="listing" tabindex="-1" role="dialog" aria-labelledby="listingLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Invoice listing</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="tablebox">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered text-center" id="paid_invoice">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center idnum">#</th>
+                                        <th class="text-center">Account Number</th>
+                                        <th class="text-center">Due Date</th>
+                                        <th class="text-center">Total Amount</th>
+                                        <th class="text-center action">Action</th>
+                                    </tr>
+                                    <!-- <tr class="searchrow">
+                                        <td class="idnum">&nbsp;</td>
+                                        <td><input type="text" class="form-control searchid"></td>
+                                        <td><input type="text" class="form-control searchid"></td>
+                                        <td><input type="text" class="form-control searchid"></td>
+                                        <td><input type="text" class="form-control searchid"></td>
+                                        <td><input type="text" class="form-control searchid"></td>
+                                        <td class="action">&nbsp;</td>
+                                    </tr> -->
+                                </thead>
+
+                                <tbody>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 <script type="text/javascript" src="/partnerpay/modules/resources/js/jquery.js"></script>  
 <script type="text/javascript" src="/partnerpay/modules/resources/js/bootstrap.file-input.js"></script>
@@ -281,6 +321,23 @@ function pay(){
 		} else {
 			alert("Please select a Mobile Number");
 		}
+}
+
+function getDetails(invoice_id){
+	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
+	$.ajax({
+      			url: "/partnerpay/web/bbps/default/get_invoice_data",  
+      			data: {"invoice_id":invoice_id,"_csrf":csrf_token},
+     			type: "POST",
+      			dataType: "json",
+      			success: function(data) {
+					  $('#paid_invoice tbody').empty();
+					  $.each(data, function (key, value) {
+						var paid_invoice_data = '<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.ACCOUNT_NO+'</td><td>'+value.DUE_DATE+'</td><td class="text-right">'+value.AMOUNT+'</td><td class="action"><div class="bbox"><a href="/partnerpay/web/bbps/default/generate_bill_receipt?bill_details_id='+value.PROVIDER_BILL_DETAILS_ID+'" target="_blank" class="btn btn-success"><span>RECEIPT</span></a></div></td></tr>';
+						$('#paid_invoice tbody').append(paid_invoice_data);
+					  });
+				  }
+   				});
 }
 </script>
 </div>

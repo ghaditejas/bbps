@@ -60,7 +60,7 @@ class TblTranscationDetails extends \yii\db\ActiveRecord
             'PAY_METHOD' => 'Pay  Method',
             'CREATED_ON' => 'Created  On',
             'UPDATED_ON' => 'Updated  On',
-            'PAY_MODE' => 'pay mode';
+            'PAY_MODE' => 'pay mode',
         ];
     }
 }

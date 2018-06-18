@@ -1,0 +1,21 @@
+ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Account already register.[\"7738897493\",\"9696969623\"]"}
+
+
+
+asd =====ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Account already register.[\"7738897493\",\"9696969623\"]"}
+
+asdsda========
+
+
+ADD BILLER API RESPONSE : {"STATUS":"200","MSG":"Data uploaded successfully"}
+{"private_key":"","mercid":245,"callbackurl":"192.168.1.184\/partnerpay\/web\/bbps\/default\/paymentstatus","checkSum":"","airpay_id":"214982","amountsum":"10.00","makepaymentdata":[{"viewbillresponseid":"29","amount":10}]}
+ MAKE PAYMENT DATA RESPONSE : {"200":"Data updated successfully"}
+{"private_key":"","mercid":245,"callbackurl":"192.168.1.184\/partnerpay\/web\/bbps\/default\/paymentstatus","checkSum":"","airpay_id":"214985","amountsum":"10.00","makepaymentdata":[{"viewbillresponseid":"29","amount":10}]}
+ MAKE PAYMENT DATA RESPONSE : {"200":"Data updated successfully"}
+{"private_key":"","mercid":245,"callbackurl":"192.168.1.184\/partnerpay\/web\/bbps\/default\/paymentstatus","checkSum":"","airpay_id":"214986","amountsum":"10.00","makepaymentdata":[{"viewbillresponseid":"29","amount":10}]}
+ MAKE PAYMENT DATA RESPONSE : {"200":"Data updated successfully"}
+{"private_key":"","mercid":245,"callbackurl":"192.168.1.184\/partnerpay\/web\/bbps\/default\/paymentstatus","checkSum":"","airpay_id":"214995","amountsum":"10.00","makepaymentdata":[{"viewbillresponseid":"30","amount":10}]}
+ MAKE PAYMENT DATA RESPONSE : {"200":"Data updated successfully"}
+{"private_key":"","mercid":245,"callbackurl":"192.168.1.184\/partnerpay\/web\/bbps\/default\/paymentstatus","checkSum":"","airpay_id":"214996","amountsum":"10.00","makepaymentdata":[{"viewbillresponseid":"31","amount":10}]}
+ MAKE PAYMENT DATA RESPONSE : {"200":"Data updated successfully"}
+ MAKE PAYMENT DATA RESPONSE : {"MAKEPAYMENT_RES_ID":29,"MAKEPAYMENT_REQ_ID":5,"CUSTOMER_ID":"245","BILLERID":"AIRTMU","BILLERACCOUNTID":"ARPBLSE0000105","SHORTNAME":"Mobile","AUTHENTICATOR":"1591578814","BILLID":"ARPBJ0047","BILLDUEDATE":"20180617","BILLDATE":"20180617","BILLNUMBER":"ACVT1806130004","PAYMENTAMMOUNT":"208.00","BANKREFNUMBER":"1528974298","STATUS":"Y","TRANSACTIONID":"ARP25","CURRENTDATE":1528974519,"RECONSTATUS":"Y","VIEW_BILL_RSP_ID":29,"RETURNURL":"192.168.1.184\\\/partnerpay\\\/web\\\/bbps\\\/default\\\/paymentstatus"}

@@ -42,7 +42,7 @@
 											<tr>
 												<td width="160" valign="top">BBPS Transaction Ref ID </td>
 												<td width="5" valign="top"> :</td>
-												<td>#refid#</td>
+												<td><?php echo $receipt['BANK_REF_PAYMENT_NUMBER']?></td>
 											</tr>
 											<tr>
 												<td width="160" valign="top">Consumer ID </td>
@@ -55,7 +55,7 @@
 											<tr>
 												<td width="160" valign="top">Mobile Number </td>
 												<td width="5" valign="top"> :</td>
-												<td>#mobile#</td>
+												<td><?php echo $receipt['ACCOUNT_NO']?></td>
 											</tr>
 											<tr>
 												<td width="160" valign="top">Email </td>
@@ -73,7 +73,7 @@
 								</tr>
 								<tr>
 									<td width="126" valign="top" style="border-style:solid; border-color:#dddddd; border-width:0 1px 1px;">Biller Status </td>
-									<td width="172" align="left" valign="top" style="border-style:solid; border-color:#dddddd; border-width:0 1px 1px;">#status#</td>
+									<td width="172" align="left" valign="top" style="border-style:solid; border-color:#dddddd; border-width:0 1px 1px;"><?php echo $receipt['PAYMENT_STATUS']?></td>
 								</tr>
 							</table>
 						</td>
@@ -104,7 +104,7 @@
 							  <tr>
 								<td width="47" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 0px 1px;">1</td>
 								<td valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;"><strong>Payment Mode</strong></td>
-								<td width="330" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;">#paymentmode#</td>
+								<td width="330" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;"><?php echo $receipt['PAY_MODE']?></td>
 							  </tr>
 							  <tr>
 								<td width="47" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 0px 1px;">2</td>
@@ -114,17 +114,17 @@
 							  <tr>
 								<td width="47" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 0px 1px;">3</td>
 								<td valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;"><strong>Bill Amount</strong></td>
-								<td width="330" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;">Rs. #amount#</td>
+								<td width="330" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;"><?php echo $receipt['AMOUNT']?></td>
 							  </tr>
 							  <tr>
 								<td width="47" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 0px 1px;">4</td>
 								<td valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;"><strong>Customer Convenience Fee</strong></td>
-								<td width="330" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;">#fee#</td>
+								<td width="330" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;"><?php echo $charge ?></td>
 							  </tr>
 							  <tr>
 								<td width="47" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 0px 1px;">5</td>
 								<td valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;"><strong>Total Payment Amount</strong></td>
-								<td width="330" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;">#total#</td>
+								<td width="330" align="left" valign="top" style="border-style:solid; border-color:#888; border-width:0 1px 1px;"><?php echo $receipt['AMOUNT']+$charge;?></td>
 							  </tr>
 							</table>
 						</td>
