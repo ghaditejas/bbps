@@ -95,7 +95,10 @@ class DefaultController extends HController
           while (($fileop = fgetcsv($handle, 1024, ",")) !== false) 
           {
             $i=1;
-            $data['account_id']= $fileop[0];
+            $data['fname']=$fileop[0];
+            $data['lname']=$fileop[1];
+            $data['email']=$fileop[2];
+            $data['account_id']= $fileop[3];
             for($i=1;$i<sizeof($fields);$i++){
               $fields_data[$fields[$i]]=$fileop[$i];
             }
@@ -122,6 +125,9 @@ class DefaultController extends HController
           for($i=1;$i<sizeof($fields);$i++){
             $fields_data[$fields[$i]]=Yii::$app->request->post(str_replace(' ','_',$fields[$i]));
           }
+          $data['fname']=Yii::$app->request->post('fname');
+          $data['lname']=Yii::$app->request->post('lname');
+          $data['email']=Yii::$app->request->post('email');
           $data['details'] = json_encode($fields_data);
           $data['billerid'] = 1;
           $data['remark'] = Yii::$app->request->post('utility_name');
@@ -203,7 +209,7 @@ class DefaultController extends HController
       public function archieve_data(){
         $data=Yii::$app->user->identity;
         $connection = Yii::$app->db;
-        $query1="SELECT * FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register AND PAYMENT_STATUS <>:payment_status";
+        $query1="SELECT * FROM tbl_provider_bill_details WHERE USER_ID=:user_id AND IS_REGISTER=:is_register AND PAYMENT_STATUS !=:payment_status";
         $registered = $connection
         ->createCommand($query1);
         $registered->bindValue(':user_id',$data['USER_ID']);
@@ -255,10 +261,7 @@ class DefaultController extends HController
           $check_registered->bindValue(':provider_id',Yii::$app->request->post('providers'));
           $check_registered->bindValue(':utility_id',Yii::$app->request->post('utility_name'));
           $check_registered_data = $check_registered->queryAll();
-          if(sizeof($check_registered_data)>0){
-            echo "WOrking";
-            exit;
-          } else {
+          if(sizeof($check_registered_data)==0){
             $insert_query="INSERT into tbl_registered_account (UTILITY_ID,PROVIDE_ID,ACCOUNT_NO) VALUES (:utility_id,:provider_id,:account_no)";
             $insert_registered = $connection
             ->createCommand($insert_query);
@@ -277,8 +280,11 @@ class DefaultController extends HController
         }
         $model->ACCOUNT_NO=$data['account_id'];
         $model->DETAILS=$data['details'];
-        $data=Yii::$app->user->identity;
-        $model->USER_ID= $data['USER_ID'];
+        $model->FNAME = $data['fname'];
+        $model->LNAME = $data['lname'];
+        $model->EMAIL = $data['email'];
+        $user_data=Yii::$app->user->identity;
+        $model->USER_ID= $user_data['USER_ID'];
         // $model->INVOICE_ID=$invoice_id;
         if($model->save(false)){
           $billing_details_id=$model->getPrimaryKey();
@@ -341,18 +347,25 @@ class DefaultController extends HController
       }
       
       public function actionListing($invoice_id=""){
-        $data=Yii::$app->user->identity;
         $connection = Yii::$app->db;
-        $all_invoice = $connection
-        ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.USER_ID=:userid AND b.PAYMENT_STATUS!="" GROUP BY INVOICE_ID');
-        $all_invoice->bindValue(':userid', $data['USER_ID']);
-        $all_invoice_data = $all_invoice->queryAll();
         $query="SELECT utility_id,utility_name from tbl_utility where is_disabled='n'";
         $utility = $connection->createCommand($query);
         $utility_data= $utility->queryAll();
         //return  $this->render('listing',array('invoice_id'=>$invoice_id,'invoice_data'=>$all_invoice_data,'utility_data'=>$utility_data));
-        return  $this->render('listing',array('invoice_data'=>$all_invoice_data,'utility_data'=>$utility_data));
+        return  $this->render('listing',array('utility_data'=>$utility_data));
       }  
+
+      public function actionPaid_invoice(){
+        $data=Yii::$app->user->identity;
+        $connection = Yii::$app->db;
+        $all_invoice = $connection
+        ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND b.PAYMENT_STATUS!="" GROUP BY INVOICE_ID');
+        $all_invoice->bindValue(':userid', $data['USER_ID']);
+        $all_invoice->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
+        $all_invoice->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
+        $all_invoice_data = $all_invoice->queryAll();
+        echo json_encode($all_invoice_data);
+      }
       
      /* public function actionChecking(){
         $connection = Yii::$app->db;
@@ -402,17 +415,18 @@ class DefaultController extends HController
         }
       }
       
-      public function actionRemoved(){
+      public function actionUnpaid(){
         $data=Yii::$app->user->identity;
         $connection = Yii::$app->db;
-        // $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.UTILITY_ID=:utility_id AND b.REMOVED='y' AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id";
-        $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND RESPONSE_NOT_RECIEVED=0 AND PAYMENT_STATUS=''";
-        $removed = $connection->createCommand($query);
-        $removed->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
-        $removed->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
-        $removed->bindValue(':user_id', $data['USER_ID']);
-        $removed_data= $removed->queryAll();
-        echo json_encode($removed_data);
+        $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND RESPONSE_NOT_RECIEVED=0 AND PAYMENT_STATUS='' AND DUE_DATE >=:from_date AND DUE_DATE <=:to_date";
+        $unpaid = $connection->createCommand($query);
+        $unpaid->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
+        $unpaid->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
+        $unpaid->bindValue(':from_date', Yii::$app->request->post('from_date'));
+        $unpaid->bindValue(':to_date', Yii::$app->request->post('to_date'));
+        $unpaid->bindValue(':user_id', $data['USER_ID']);
+        $unpaid_data= $unpaid->queryAll();
+        echo json_encode($unpaid_data);
       }
       
       public function actionPay(){
@@ -682,7 +696,15 @@ class DefaultController extends HController
         }
         
         public function actionDownload_csv_file($provider){
-          $fields = json_decode($this->actionGet_fields($provider),true);
+          $fields[0]='First Name';
+          $fields[1]='Last Name';
+          $fields[2]='Email';
+          $i = 3;
+          $field = json_decode($this->actionGet_fields($provider),true);
+          foreach($field as $value){
+            $fields[$i] = $value;
+            $i++;
+          }
           $name = md5(uniqid() . microtime(TRUE) . mt_rand()). '.csv';
           header('Content-Type: text/csv');
           header('Content-Disposition: attachment; filename='. $name);

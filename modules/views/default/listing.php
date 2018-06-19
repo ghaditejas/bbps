@@ -1,79 +1,18 @@
 <!-- <link rel="stylesheet" href="/partnerpay/modules/resources/css/customs.css" type="text/css"> -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<link rel="stylesheet" href="/partnerpay/modules/resources/css/dataTables.bootstrap.css">
+<!-- <link rel="stylesheet" href="/partnerpay/modules/resources/css/dataTables.bootstrap.css"> -->
+<!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css"> -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/dataTables.jqueryui.min.css">
 <div class="container">
+	
 	<div class="page-header">
 		<h4>Invoice Listing</h4>
 		<div class="fieldstx">
 				<a class="btn btn-default" href="/partnerpay/web/bbps/default/">Back</a>
 		</div>
-		<!-- <div class="summary">Displaying <b>1-4</b> of <b>4</b> items.</div> -->
 	</div>
-	
-	<ul class="nav nav-tabs" role="tablist">
-		<li role="presentation" class="active"><a href="#alllist" aria-controls="alllist" role="tab" data-toggle="tab">All Invoice list</a></li>
-		<li role="presentation"><a href="#dislist" aria-controls="dislist" role="tab" data-toggle="tab">Unpaid bill list</a></li>
-	</ul>
-	
-	<div class="tab-content">
-		<div role="tabpanel" class="tab-pane active" id="alllist">
-			<div class="tablebox">	
-			<div class="table-responsive">
-			<table id="all_invoice" class="table table-striped table-bordered text-center">
-			<thead>
-			<tr>
-				<th class="text-center idnum">#</th>
-				<th class="text-center">Provider Name</th>
-                <th class="text-center">Utility Name</th>
-				<!-- <th class="text-center">Issue Date</th>
-				<th class="text-center">Due Date</th> -->
-				<th class="text-center">Total Amount</th>
-				<th class="text-center action">&nbsp;</th>
-			</tr>
-			<!-- <tr class="searchrow">
-				<td class="idnum">&nbsp;</td>
-				<td><input type="text" class="form-control searchid" ></td>
-				<td><input type="text" class="form-control searchid" ></td>
-				<td><input type="text" class="form-control searchid" ></td>
-				<td><input type="text" class="form-control searchid" ></td>
-				<td class="action">&nbsp;</td>
-			</tr> -->
-			</thead>
-			
-			<tbody>
-                <?php $i=1; foreach($invoice_data as $data){?>
-					
-					<tr>
-						<td class="idnum"><?=$i;?></td>
-						<td><?php echo $data['provider_name'];?></td>
-                        <td><?php echo $data['utility_name'];?></td>
-						<td class="text-right" id="amount_<?=$data['INVOICE_ID']?>"><?php if($data['invoice_amount']==0){?>
-                            -
-                       <?php }else{echo $data['invoice_amount'];}?></td>
-						<td class="action">
-							<div class="bbox">
-                            <a href="#listing" style="margin-left:25px" data-toggle="modal" onClick="getDetails('<?php echo $data['INVOICE_ID'];?>')" class="btn btn-primary" >DETAILS</a>
-							</div>
-						</td>
-					</tr> 
-                <?php $i++; } ?>
-			</tbody>
-
-			
-			</table>
-			</div>
-			</div>
-			<!-- <nav class="pull-right">
-			  <ul class="pager">
-				<li><a href="#"><span class="glyphicon glyphicon-chevron-left"></a></li>
-				<li><a href="#"><span class="glyphicon glyphicon-chevron-right"></a></li>
-			  </ul>
-			</nav> -->
-		</div><!-- .tab-content close -->
-		<div role="tabpanel" class="tab-pane" id="dislist">
-		
-		<form id="remove_filter" action="javascript:getRecords()">
 			<div class="fliterbox">
+			  <form id="remove_filter" action="javascript:loadData()">
 				<div class="row">
 					<div class="col-sm-6 col-md-4">
 						<div class="form-group">
@@ -100,13 +39,41 @@
 						<input type="submit" class="btn btn-primary fliterbtn" value="Submit">
 					</div>
 				</div>
-			</div><!--close fliterbox -->
-			</form>
+			 </form>
+			</div><br><!--close fliterbox -->
+	<div id="tabs" class="hidden">		
+	<ul class="nav nav-tabs" role="tablist">
+	<li role="presentation" class="active"><a href="#dislist" id="unpaidlist" aria-controls="dislist" role="tab" data-toggle="tab">Unpaid bill list</a></li>
+		<li role="presentation"><a href="#alllist" id="allinvoice" aria-controls="alllist" role="tab" onClick="allInvoice()" data-toggle="tab">All Invoice list</a></li>
+	</ul>
+	<div class="tab-content">
+	<div role="tabpanel" class="tab-pane active" id="dislist">
+				<div class="row">
+							<div class="col-sm-6 col-md-4">
+								<div class="form-group req">
+									<div class="form-group required">
+										<label class="control-label" for="">From Date</label>
+										<input type="text" id="from_date" onChange="getRecords()" class="form-control datepicker1" name="frmdate" readonly>
+										<div class="help-block"></div>
+									</div>
+								</div>
+							</div>
+							<div class="col-sm-6 col-md-4">
+								<div class="form-group req">
+									<div class="form-group required">
+										<label class="control-label" for="merchant-id">To Date</label>
+										<input type="text" id="to_date" onChange="getRecords()" class="form-control datepicker2" name="todate" readonly>
+										<div class="help-block"></div>
+									</div>
+								</div>
+							</div>
+				</div>
+		
 		
 			<div class="remover-table hidden" id="removed">	
-			<div class="tablebox">	
-			<div class="table-responsive">
-			<!-- <input type="button" class="btn btn-primary" value="Pay Selected" style=""> -->
+				<div class="tablebox">	
+					<div class="table-responsive">
+					<!-- <input type="button" class="btn btn-primary" value="Pay Selected" style=""> -->
 			<table class="table table-striped table-bordered text-center" id="removed_data">
 			<thead>
 			<tr>
@@ -143,7 +110,49 @@
 			</nav>   -->
 			</div>
 		</div><!-- .tab-content close -->
-	</div><!-- .tab-content close -->	
+
+	
+		<div role="tabpanel" class="tab-pane" id="alllist">
+			<div class="tablebox">	
+			<div class="table-responsive">
+			<table id="all_invoice" class="table table-striped table-bordered text-center">
+			<thead>
+			<tr>
+				<th class="text-center idnum">#</th>
+				<th class="text-center">Provider Name</th>
+                <th class="text-center">Utility Name</th>
+				<!-- <th class="text-center">Issue Date</th>
+				<th class="text-center">Due Date</th> -->
+				<th class="text-center">Total Amount</th>
+				<th class="text-center action">&nbsp;</th>
+			</tr>
+			<!-- <tr class="searchrow">
+				<td class="idnum">&nbsp;</td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td class="action">&nbsp;</td>
+			</tr> -->
+			</thead>
+			
+			<tbody>
+			</tbody>
+
+			
+			</table>
+			</div>
+			</div>
+			<!-- <nav class="pull-right">
+			  <ul class="pager">
+				<li><a href="#"><span class="glyphicon glyphicon-chevron-left"></a></li>
+				<li><a href="#"><span class="glyphicon glyphicon-chevron-right"></a></li>
+			  </ul>
+			</nav> -->
+		</div><!-- .tab-content close -->
+		<!-- .tab-content close -->	
+	</div>
+	</div>
 	<div class="modal fade" id="listing" tabindex="-1" role="dialog" aria-labelledby="listingLabel">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -186,55 +195,27 @@
     </div>
 
 
-<script type="text/javascript" src="/partnerpay/modules/resources/js/jquery.js"></script>  
+<script type="text/javascript" src="/partnerpay/modules/resources/js/jquery.js"></script>  	
 <script type="text/javascript" src="/partnerpay/modules/resources/js/bootstrap.file-input.js"></script>
+<script type="text/javascript" src="/partnerpay/modules/resources/js/jquery-ui/jquery-ui.min.js"></script>
 
+<script type="text/javascript">
+
+		jQuery('.datepicker1').datepicker({"dateFormat":"yy-mm-dd"});
+		jQuery('.datepicker2').datepicker({"dateFormat":"yy-mm-dd"});
+	
+	</script>
 <script>
-    // function fetchdata(invoice_id,csrf_token){
-	// 	if(invoice_id){
-    //         $.ajax({
-	// 				type: "POST",
-    //   				url: "/partnerpay/web/bbps/default/checking",
-	// 				data: {"id":invoice_id,"_csrf":csrf_token},
-	// 				// data_json:
-    //   				success: function(data) {
-	// 	  					if(data){
-	// 							  $('#'+invoice_id).removeAttr('disabled');
-	// 							  $("#"+invoice_id).attr("href", "/partnerpay/web/bbps/default/payment?invoice_id="+invoice_id);
-	// 						} else {
-	// 							setInterval(fetchdata(invoice_id,csrf_token),5000);
-	// 						}
-	//   					}
-    //         		 });
-	// 		}
-    //     }
-
-
     $(document).ready(function(){
-     $("#all_invoice").DataTable({
-        "paging": true,
-        "searching": true,
-        'autowidth': true,
-        "ordering": false,
-        "lengthMenu": [2, 5, 10, 25, 50, 75, 100],
-	 });
-	 $('#select_all').click(function(){
-		 $('.checkbox').prop('checked',$(this).prop('checked'));
-	 });
-	 $('body').on('click', 'input.checkbox:checkbox', function() {
-		if (!this.checked) {
-            $("#select_all").prop('checked', false);
-         }
-	});
-	// var check =parseInt(<?php echo $invoice_id?>);
-	// if(check){
-	//  var invoice_id= parseInt(<?php echo $invoice_id?>);
-	// }else{
-	// 	var invoice_id="";
-	// }
-	//  var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
-	//  setInterval(fetchdata(invoice_id,csrf_token),5000);	
-     });
+	 	$('#select_all').click(function(){
+			 $('.checkbox').prop('checked',$(this).prop('checked'));
+	 	});
+	 	$('body').on('click', 'input.checkbox:checkbox', function() {
+			if (!this.checked) {
+            	$("#select_all").prop('checked', false);
+         	}
+		});
+    });
 </script>
 <script>
 function getProviders(){
@@ -262,13 +243,26 @@ function getProviders(){
 }
 </script>
 <script>
+function loadData(){
+	$('#tabs').removeClass('hidden');
+	var active_tab = $('.tab-pane.active').attr('id');
+	if(active_tab == 'dislist'){
+		getRecords();
+	} else if(active_tab == 'alllist'){
+		allInvoice();
+	}
+}
+
 function getRecords(){
 	var utility= $("#utility_select").val();
 	var provider= $("#providers_select").val();
+	var from_date = $('#from_date').val();
+	var to_date = $('#to_date').val();
 	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
-	$.ajax({
-      		url: "/partnerpay/web/bbps/default/removed",  
-      		data: {"utility_id": utility,"provider_id": provider,"_csrf":csrf_token},
+	if(utility && provider && from_date && to_date){
+		$.ajax({
+      		url: "/partnerpay/web/bbps/default/unpaid",  
+      		data: {"utility_id": utility,"provider_id": provider,'from_date':from_date,'to_date':to_date,"_csrf":csrf_token},
      		type: "POST",
       		dataType: "json",
       		success: function(data) {
@@ -298,7 +292,8 @@ function getRecords(){
     							],
      				});
 			}
-   		})
+		  });
+		}	
 }
 </script>
 <script>
@@ -338,6 +333,42 @@ function getDetails(invoice_id){
 					  });
 				  }
    				});
+}
+
+function allInvoice(){
+	var utility= $("#utility_select").val();
+	var provider= $("#providers_select").val();
+	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
+	if(utility && provider){
+		$.ajax({
+      		url: "/partnerpay/web/bbps/default/paid_invoice",  
+      		data: {"utility_id": utility,"provider_id": provider,"_csrf":csrf_token},
+     		type: "POST",
+      		dataType: "json",
+      		success: function(data) {
+				  $('#all_invoice').removeClass('hidden');
+				  if($.fn.DataTable.isDataTable( '#all_invoice' )){
+				  	$("#all_invoice").DataTable().destroy();
+				  }
+				  $('#all_invoice tbody').empty();
+				$.each(data, function (key, value) {
+                    var all_invoice_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.provider_name+'</td><td>'+value.utility_name+'</td><td class="text-right" id="amount_'+value.INVOICE_ID+'">'+value.invoice_amount+'</td><td class="action"><div class="bbox"><a href="#listing" style="margin-left:25px" data-toggle="modal" onClick="getDetails('+value.INVOICE_ID+')" class="btn btn-primary" >DETAILS</a></div></td></tr>';
+                    $('#all_invoice tbody').append(all_invoice_data);
+             	});
+				 $("#all_invoice").DataTable({
+    				    "paging": true,
+        				"searching": true,
+        				'autowidth': true,
+        				"ordering": false,
+        				"lengthMenu": [2, 5, 10, 25, 50, 75, 100],
+						"buttons": [
+        						'selectAll',
+        						'selectNone'
+    							],
+     				});
+			}
+		  });
+		}
 }
 </script>
 </div>

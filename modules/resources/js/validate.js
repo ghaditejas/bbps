@@ -45,6 +45,16 @@ $(document).ready(function () {
                 extension: "Invalid File Format",
             },
         },
+        errorPlacement: function(error, element) {
+            if (element.attr("name") == "bulk_upload")
+                {
+                    error.insertAfter("a.file-input-wrapper");
+                }
+                else
+                {
+                    error.insertAfter(element);
+                }
+            },
         submitHandler: function (form, event) {
                 form.submit();
         }

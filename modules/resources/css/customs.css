@@ -341,7 +341,7 @@ table .status a:hover{text-decoration:none;}
 .opcrow{ position: relative; z-index:5; border:0px solid #cccccc;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px; display:none;}
 .opcrow:before{ content:''; height:100%; width:1px; background-color:#ccc; position: absolute; top:0; left:24.4%; display:none;}
 .opclist-warp{ /* padding-right:0; */}
-.opclist{ list-style-type:none; margin:0; padding:0;}
+.opclist{ list-style-type:none; margin:0; padding:0; max-height: 445px; overflow: auto;}
 .opclist li{ list-style-type:none; margin:0; padding:10px 15px;border-bottom:1px solid #cccccc; font-size:18px; line-height:22px;}
 .opclist li:last-child{ border-bottom:0px solid #cccccc;}
 .opclist-box{border:1px solid #cccccc;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px; padding-top:15px; padding-bottom:15px;}

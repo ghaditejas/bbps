@@ -49,9 +49,6 @@
                     <div class="row">
                         <input type="hidden" name="_csrf" value="<?=Yii::$app->request->getCsrfToken()?>" />
                         <div class="col-md-4 opclist-warp">
-                            <!-- <select class="form-control" id="providers" name="providers" onChange="getFields()">
-                                <option value="">SELECT PROVIDER</option>
-                            </select> -->
                             <ul class="opclist" id="providers">
                             </ul>
                         </div>
@@ -69,18 +66,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <!-- <div class="col-sm-12 col-md-8"><div class="form-group">
-                            <select class="form-control" id="providers" name="providers" onChange="getFields()">
-                                <option value="">SELECT PROVIDER</option>
-                            </select>
-                            </div></div> -->
                             <div><input type="hidden" id="utility_name" name="utility_name" value=""></div>
                             <div class="row" id="bulk">
                                 <div class="col-sm-12 col-md-8">
                                     <div class="form-group">                    
                                         <div class="file">
                                             <input type="file" id="bulk_upload" title="Bulk Upload" name="bulk_upload">
-                                        </div>                 
+                                        </div>   
+                                        <span id="errbulk_upload"></span>              
                                     </div>
                                     <div id="download_csv">
 
@@ -89,33 +82,24 @@
                                 </div>
                             </div>      
                             <div class="row" id="single">
-                                <!-- <div class="col-sm-12 col-md-8">                            
-                                    <div class="form-group">
-                                        <input type="text" class="form-control" id="mobile_no" name="mobile_no" placeholder="Enter Your Account Number">
-                                        <div class="help-block"></div>
-                                    </div>
-                                </div>
-
                                 <div class="col-sm-12 col-md-8">                            
                                     <div class="form-group">
                                         <input type="text" class="form-control" id="fname" name="fname" placeholder="Enter your First Name">
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
-
                                 <div class="col-sm-12 col-md-8">                            
                                     <div class="form-group">
                                         <input type="text" class="form-control" id="lname" name="lname" placeholder="Enter your Last Name">
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
-
                                 <div class="col-sm-12 col-md-8">                            
                                     <div class="form-group">
                                         <input type="text" class="form-control" id="email" name="email" placeholder="Enter your Email">
                                         <div class="help-block"></div>
                                     </div>
-                                </div> -->
+                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-12 col-md-8">
@@ -158,11 +142,8 @@ function setUtility(id,name){
       dataType: "json",
       success: function(data) {
             $('#providers').empty();
-            // console.log(data);
-            // $('#providers').append('<option value="">SELECT PROVIDERS</option>');
            $.each(data, function (key, value) {
                     var provider_list='<li><label class="radio-inline"><input type="radio" onClick="getFields()" name="providers" id="providers" value="'+value.id+'">'+value.name+'</label></li>';
-                    // var provider_list='<option value="'+value.id+'">'+value.name+'</option>';
                     $('#providers').append(provider_list);
              });
       }
@@ -170,7 +151,7 @@ function setUtility(id,name){
 }
 
 function getFields(){
-    var provider = $("input[name=providers]").val();
+    var provider = $("input[name=providers]:checked").val();
     if(provider){
      $.ajax({
       url: "/partnerpay/web/bbps/default/get_fields",  
@@ -178,10 +159,10 @@ function getFields(){
       type: "POST",
       dataType: "json",
       success: function(data) {
-            $('#single').empty();
+            $('.dynamic').remove();
            $.each(data, function (key, value) {
                console.log(value.validation);
-                    var fields='<div class="col-sm-12 col-md-8"><div class="form-group"><input type="text" name="'+value.field+'" class="dynamic_field form-control" placeholder="Enter your '+value.field+'" value=""><span class="error"></span></div></div>';
+                    var fields='<div class="col-sm-12 col-md-8 dynamic"><div class="form-group"><input type="text" name="'+value.field+'" class="dynamic_field form-control" placeholder="Enter your '+value.field+'" value=""><span class="error"></span></div></div>';
                     $('#single').append(fields);
                  $('input[name="'+value.field+'"]').rules("add", { 
                     required:function(element){
