@@ -50,9 +50,25 @@
 				<div class="form-group req">
 					<div class="form-group field-invoice-pay_amount required">
 						<label class="control-label" for="invoice-pay_amount">Amount</label>
+						<input type="hidden" value= <?php  echo  $invoice_amount; ?> id="bill_amount">
 						<input type="text" class="form-control" name="invoice_amount" id="invoice_amount" readonly="readonly" value="<?php if(isset($invoice_amount)){
                            echo  $invoice_amount;
                         } ?>">
+						<div class="help-block"></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-sm-6">
+				<div class="form-group req">
+					<div class="form-group field-invoice-pay_amount required">
+						<label class="control-label" for="invoice-pay_amount">PAYMENT MODE</label>
+						<select class="form-control" name="payment_mode" id="payment_mode" onChange="applyCharge()">
+						<option value="">SELECT PAYMENT MODE</option>
+						<option value="pgdc">Debit</option>
+						<option value="pgcc">Credit</option>
+						<option value="ppc">Wallet</option>
+						</select>
 						<div class="help-block"></div>
 					</div>
 				</div>
@@ -138,7 +154,13 @@
     </div>
   </div>
 </div>
+<script type="text/javascript" src="/partnerpay/modules/resources/js/jquery.js"></script>  
 <script>
+function applyCharge(){
+	var amount = $('#bill_amount').val();
+	console.log(amount);
+}
+
  function remove_mobile(mobile_no,invoice_id){
     var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
     $.ajax({
