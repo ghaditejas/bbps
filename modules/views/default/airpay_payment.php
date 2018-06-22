@@ -25,7 +25,7 @@
  		            <input type="hidden" name="currency" value="356">
 		            <input type="hidden" name="isocurrency" value="INR">
                     <input type="hidden" name="checksum" value="<?php echo $checksum; ?>">
-				    <input type="hidden" name="chmod" value= "">	
+				    <input type="hidden" name="chmod" value= "<?php echo $payment_data['payment_mode'] ?>">	
                 </form>
 		    </td>
         </tr>

@@ -50,10 +50,27 @@
 				<div class="form-group req">
 					<div class="form-group field-invoice-pay_amount required">
 						<label class="control-label" for="invoice-pay_amount">Amount</label>
-						<input type="hidden" value= <?php  echo  $invoice_amount; ?> id="bill_amount">
-						<input type="text" class="form-control" name="invoice_amount" id="invoice_amount" readonly="readonly" value="<?php if(isset($invoice_amount)){
+						<input type="text" class="form-control" value= "<?php if(isset($invoice_amount)){
                            echo  $invoice_amount;
-                        } ?>">
+                        }?>" name="bill_amount" id="bill_amount" readonly="readonly">
+						<div class="help-block"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="form-group req">
+					<div class="form-group field-invoice-pay_amount required">
+						<label class="control-label" for="invoice-pay_amount">PAYMENT MODE</label>
+						<select class="form-control" name="payment_mode" id="payment_mode" onChange="applyCharge()">
+						<option value="">SELECT PAYMENT MODE</option>
+						<?php 
+						 $modes = json_decode($charges['MODES'],true);?>
+						<?php foreach($modes as $key=>$values) { ?>
+							<option value="<?php echo  $key;?>"><?php echo $values;?></option>
+						<?php } ?>
+						</select>
 						<div class="help-block"></div>
 					</div>
 				</div>
@@ -62,13 +79,10 @@
 			<div class="col-sm-6">
 				<div class="form-group req">
 					<div class="form-group field-invoice-pay_amount required">
-						<label class="control-label" for="invoice-pay_amount">PAYMENT MODE</label>
-						<select class="form-control" name="payment_mode" id="payment_mode" onChange="applyCharge()">
-						<option value="">SELECT PAYMENT MODE</option>
-						<option value="pgdc">Debit</option>
-						<option value="pgcc">Credit</option>
-						<option value="ppc">Wallet</option>
-						</select>
+						<label class="control-label" for="invoice-pay_amount">Total Amount</label>
+						<input type="text" class="form-control" name="invoice_amount" id="invoice_amount" readonly="readonly" value="<?php if(isset($invoice_amount)){
+                           echo  $invoice_amount;
+                        } ?>">
 						<div class="help-block"></div>
 					</div>
 				</div>
@@ -83,8 +97,8 @@
 			<div class="col-sm-12 ">
 				<div class="form-group field-invoice-iagree">
 					<input type="checkbox" id="tandc1"  name="agree" value="1">
-					<div><label>I accept the 
-					<a href="#tandc" class="tnclink required" data-toggle="modal" data-target="#tandc">terms and conditions.</a></label></div>
+					<label>I accept the 
+					<a href="#tandc" class="tnclink required" data-toggle="modal" data-target="#tandc">terms and conditions.</a></label>
 					<div class="help-block"></div>
 				</div>
 			</div>
@@ -158,7 +172,13 @@
 <script>
 function applyCharge(){
 	var amount = $('#bill_amount').val();
-	console.log(amount);
+	var charges  = <?php echo $charges['CHARGES']; ?>;  
+	var charge_mode =  $('#payment_mode').val();
+	taxRate = 0.18;
+	calculatedAmount = (charges[charge_mode] * amount) / 100;
+    b_chgs = calculatedAmount * taxRate;
+    tot_amt = parseFloat(amount) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
+	$('#invoice_amount').val(parseFloat(tot_amt).toFixed(2));
 }
 
  function remove_mobile(mobile_no,invoice_id){

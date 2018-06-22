@@ -21,7 +21,9 @@
 }
 
 .error{
-	color:#FF0000;
+	color: #d81313;
+    font-size: 13px;
+    font-weight: normal;
 }
 
 *{margin: 0;padding: 0;border: 0;font-size: 100%;font: inherit;vertical-align: baseline}

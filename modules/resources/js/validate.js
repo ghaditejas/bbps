@@ -19,6 +19,22 @@ $(document).ready(function () {
             providers: {
                 required: true,
             },
+            email: {
+                required: function(element){
+                    return ($("#bulk_upload").val().length == 0);
+                },
+                email: true,
+            },
+            fname:{
+                required: function(element){
+                    return ($("#bulk_upload").val().length == 0);
+                },    
+            },
+            lname:{
+                required: function(element){
+                    return ($("#bulk_upload").val().length == 0);
+                },
+            },
             bulk_upload: {
                 required:function(element){
                     var valid=false;
@@ -44,16 +60,25 @@ $(document).ready(function () {
                 required: "Bulk Upload File is Required",
                 extension: "Invalid File Format",
             },
+            email: {
+                required: "Email is Required",
+                email: "Email format not proper"
+            },
+            fname :{
+                required: "First Name is required"
+            },
+            lname :{
+                required: "Last Name is required"
+            },
         },
         errorPlacement: function(error, element) {
-            if (element.attr("name") == "bulk_upload")
-                {
+            if (element.attr("name") == "bulk_upload"){
                     error.insertAfter("a.file-input-wrapper");
-                }
-                else
-                {
+            } else if (element.attr("name") == "providers"){
+                error.insertBefore(".opclist")
+            } else {
                     error.insertAfter(element);
-                }
+            }
             },
         submitHandler: function (form, event) {
                 form.submit();
@@ -93,20 +118,38 @@ $(document).ready(function () {
             },
             agree: {
                 required: true,
-            }
-            
+            },
+            payment_mode: {
+                required: true,
+            },
+            bill_amount: {
+                required: true,
+            },
         },
         messages: {
             merchant: {
-                required: "This field is Required",
+                required: "Merchant Name field is Required",
             },
             invoice_amount: {
                 required: "This field is Required",
             },
             agree: {
+                required: "Please select terms and condition",
+            },
+            payment_mode: {
                 required: "This field is Required",
-            }
+            },
+            bill_amount: {
+                required: "This field is Required",
+            },
         },
+        errorPlacement: function(error, element) {
+            if (element.attr("name") == "agree"){
+                    error.insertBefore(".field-invoice-iagree");
+            } else {
+                    error.insertAfter(element);
+            }
+            },
         submitHandler: function (form) {
             form.submit();
         }

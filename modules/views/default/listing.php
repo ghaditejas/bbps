@@ -1,4 +1,4 @@
-<!-- <link rel="stylesheet" href="/partnerpay/modules/resources/css/customs.css" type="text/css"> -->
+<link rel="stylesheet" href="/partnerpay/modules/resources/css/customs.css" type="text/css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <!-- <link rel="stylesheet" href="/partnerpay/modules/resources/css/dataTables.bootstrap.css"> -->
 <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css"> -->
@@ -43,8 +43,10 @@
 			</div><br><!--close fliterbox -->
 	<div id="tabs" class="hidden">		
 	<ul class="nav nav-tabs" role="tablist">
-	<li role="presentation" class="active"><a href="#dislist" id="unpaidlist" aria-controls="dislist" role="tab" data-toggle="tab">Unpaid bill list</a></li>
+		<li role="presentation" class="active"><a href="#dislist" id="unpaidlist" aria-controls="dislist" role="tab" data-toggle="tab">Unpaid bill list</a></li>
+		<li role="presentation" ><a href="#unpaidinvoice" id="unpaidinvoicelist" aria-controls="dislist" onClick="unpaidInvoice()" role="tab" data-toggle="tab">Unpaid bill list</a></li>
 		<li role="presentation"><a href="#alllist" id="allinvoice" aria-controls="alllist" role="tab" onClick="allInvoice()" data-toggle="tab">All Invoice list</a></li>
+		<li role="presentation"><a href="#registration_failed" id="registerationfailed" aria-controls="alllist" role="tab" onClick="registerationPending()" data-toggle="tab">Registeration Failed/Pending</a></li>
 	</ul>
 	<div class="tab-content">
 	<div role="tabpanel" class="tab-pane active" id="dislist">
@@ -70,7 +72,7 @@
 				</div>
 		
 		
-			<div class="remover-table hidden" id="removed">	
+			<div class="removed-table hidden" id="removed">	
 				<div class="tablebox">	
 					<div class="table-responsive">
 					<!-- <input type="button" class="btn btn-primary" value="Pay Selected" style=""> -->
@@ -111,6 +113,43 @@
 			</div>
 		</div><!-- .tab-content close -->
 
+		<div role="tabpanel" class="tab-pane" id="unpaidinvoice">
+			<div class="tablebox">	
+			<div class="table-responsive">
+			<table id="unpaid_invoice" class="table table-striped table-bordered text-center">
+			<thead>
+			<tr>
+				<th class="text-center idnum">#</th>
+				<th class="text-center">Inovice Number</th>
+				<th class="text-center">Provider Name</th>
+                <th class="text-center">Utility Name</th>
+				<th class="text-center">Total Amount</th>
+				<th class="text-center action">&nbsp;</th>
+			</tr>
+			<!-- <tr class="searchrow">
+				<td class="idnum">&nbsp;</td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td class="action">&nbsp;</td>
+			</tr> -->
+			</thead>
+			
+			<tbody>
+			</tbody>
+
+			
+			</table>
+			</div>
+			</div>
+			<!-- <nav class="pull-right">
+			  <ul class="pager">
+				<li><a href="#"><span class="glyphicon glyphicon-chevron-left"></a></li>
+				<li><a href="#"><span class="glyphicon glyphicon-chevron-right"></a></li>
+			  </ul>
+			</nav> -->
+		</div>
 	
 		<div role="tabpanel" class="tab-pane" id="alllist">
 			<div class="tablebox">	
@@ -151,6 +190,44 @@
 			</nav> -->
 		</div><!-- .tab-content close -->
 		<!-- .tab-content close -->	
+
+	    <div role="tabpanel" class="tab-pane" id="registration_failed">
+			<div class="tablebox">	
+			<div class="table-responsive">
+			<table id="failed_pending" class="table table-striped table-bordered text-center">
+			<thead>
+			<tr>
+				<th class="text-center idnum">#</th>
+				<th class="text-center">Account Number</th>
+				<th class="text-center">Provider Name</th>
+                <th class="text-center">Utility Name</th>
+				<th class="text-center action">&nbsp;</th>
+			</tr>
+			<!-- <tr class="searchrow">
+				<td class="idnum">&nbsp;</td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td><input type="text" class="form-control searchid" ></td>
+				<td class="action">&nbsp;</td>
+			</tr> -->
+			</thead>
+			
+			<tbody>
+			</tbody>
+
+			
+			</table>
+			</div>
+			</div>
+			<!-- <nav class="pull-right">
+			  <ul class="pager">
+				<li><a href="#"><span class="glyphicon glyphicon-chevron-left"></a></li>
+				<li><a href="#"><span class="glyphicon glyphicon-chevron-right"></a></li>
+			  </ul>
+			</nav> -->
+		</div>
+
 	</div>
 	</div>
 	<div class="modal fade" id="listing" tabindex="-1" role="dialog" aria-labelledby="listingLabel">
@@ -250,6 +327,8 @@ function loadData(){
 		getRecords();
 	} else if(active_tab == 'alllist'){
 		allInvoice();
+	} else if (active_tab == 'unpaidinvoicelist'){
+		unpaidInvoice();
 	}
 }
 
@@ -259,7 +338,7 @@ function getRecords(){
 	var from_date = $('#from_date').val();
 	var to_date = $('#to_date').val();
 	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
-	if(utility && provider && from_date && to_date){
+	if(utility && provider){
 		$.ajax({
       		url: "/partnerpay/web/bbps/default/unpaid",  
       		data: {"utility_id": utility,"provider_id": provider,'from_date':from_date,'to_date':to_date,"_csrf":csrf_token},
@@ -285,7 +364,7 @@ function getRecords(){
         				"searching": true,
         				'autowidth': true,
         				"ordering": false,
-        				"lengthMenu": [2, 5, 10, 25, 50, 75, 100],
+        				"lengthMenu": [10, 25, 50, 75, 100],
 						"buttons": [
         						'selectAll',
         						'selectNone'
@@ -328,7 +407,14 @@ function getDetails(invoice_id){
       			success: function(data) {
 					  $('#paid_invoice tbody').empty();
 					  $.each(data, function (key, value) {
-						var paid_invoice_data = '<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.ACCOUNT_NO+'</td><td>'+value.DUE_DATE+'</td><td class="text-right">'+value.AMOUNT+'</td><td class="action"><div class="bbox"><a href="/partnerpay/web/bbps/default/generate_bill_receipt?bill_details_id='+value.PROVIDER_BILL_DETAILS_ID+'" target="_blank" class="btn btn-success"><span>RECEIPT</span></a></div></td></tr>';
+						var paid_invoice_data = '<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.ACCOUNT_NO+'</td><td>'+value.DUE_DATE+'</td><td class="text-right">'+value.AMOUNT+'</td>';
+						if(value.PAYMENT_STATUS == "success"){
+							paid_invoice_data = paid_invoice_data+'<td class="action"><div class="bbox"><a href="/partnerpay/web/bbps/default/generate_bill_receipt?bill_details_id='+value.PROVIDER_BILL_DETAILS_ID+'" target="_blank" class="btn btn-success"><span>RECEIPT</span></a></div></td></tr>';
+						} else if(value.PAYMENT_STATUS == 'fail') {
+							paid_invoice_data = paid_invoice_data+'<td class="action"><div class="bbox"><a href="javascript:void(0)" class="btn btn-danger"><span>FAILED</span></a></div></td></tr>';
+						} else {
+							paid_invoice_data = paid_invoice_data+'<td class="action"><div class="bbox"><a href="javascript:void(0)" class="btn btn-warning"><span>IN PROCESS</span></a></div></td></tr>';
+						}
 						$('#paid_invoice tbody').append(paid_invoice_data);
 					  });
 				  }
@@ -360,7 +446,84 @@ function allInvoice(){
         				"searching": true,
         				'autowidth': true,
         				"ordering": false,
-        				"lengthMenu": [2, 5, 10, 25, 50, 75, 100],
+        				"lengthMenu": [10, 25, 50, 75, 100],
+						"buttons": [
+        						'selectAll',
+        						'selectNone'
+    							],
+     				});
+			}
+		  });
+		}
+}
+
+function unpaidInvoice(){
+	var utility= $("#utility_select").val();
+	var provider= $("#providers_select").val();
+	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
+	if(utility && provider){
+		$.ajax({
+      		url: "/partnerpay/web/bbps/default/unpaid_invoice",  
+      		data: {"utility_id": utility,"provider_id": provider,"_csrf":csrf_token},
+     		type: "POST",
+      		dataType: "json",
+      		success: function(data) {
+				  $('#unpaid_invoice').removeClass('hidden');
+				  if($.fn.DataTable.isDataTable( '#all_invoice' )){
+				  	$("#unpaid_invoice").DataTable().destroy();
+				  }
+				  $('#unpaid_invoice tbody').empty();
+				$.each(data, function (key, value) {
+                    var all_invoice_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.INVOICE_ID+'</td><td>'+value.provider_name+'</td><td>'+value.utility_name+'</td><td class="text-right" id="amount_'+value.INVOICE_ID+'">'+value.invoice_amount+'</td><td><a href="/partnerpay/web/bbps/default/payment?invoice_id='+value.INVOICE_ID+'" class="btn btn-primary">Pay Now</a></td></tr></tr>';
+                    $('#unpaid_invoice tbody').append(all_invoice_data);
+             	});
+				 $("#unpaid_invoice").DataTable({
+    				    "paging": true,
+        				"searching": true,
+        				'autowidth': true,
+        				"ordering": false,
+        				"lengthMenu": [10, 25, 50, 75, 100],
+						"buttons": [
+        						'selectAll',
+        						'selectNone'
+    							],
+     				});
+			}
+		  });
+		}
+}
+
+function registerationPending(){
+	var utility= $("#utility_select").val();
+	var provider= $("#providers_select").val();
+	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
+	if(utility && provider){
+		$.ajax({
+      		url: "/partnerpay/web/bbps/default/registeration_pending_failed",  
+      		data: {"utility_id": utility,"provider_id": provider,"_csrf":csrf_token},
+     		type: "POST",
+      		dataType: "json",
+      		success: function(data) {
+				  $('#failed_pending').removeClass('hidden');
+				  if($.fn.DataTable.isDataTable( '#all_invoice' )){
+				  	$("#failed_pending").DataTable().destroy();
+				  }
+				  $('#failed_pending tbody').empty();
+				$.each(data, function (key, value) {
+                    var failed_registeration='<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.ACCOUNT_NO+'</td><td>'+value.provider_name+'</td><td>'+value.utility_name+'</td>';
+					if(value.PAYMENT_STATUS == 'fail') {
+						failed_registeration = failed_registeration+'<td class="action"><div class="bbox"><a href="javascript:void(0)" class="btn btn-danger"><span>FAILED</span></a></div></td></tr>';
+						} else {
+							failed_registeration = failed_registeration+'<td class="action"><div class="bbox"><a href="javascript:void(0)" class="btn btn-warning"><span>IN PROCESS</span></a></div></td></tr>';
+						}
+                    $('#failed_pending tbody').append(failed_registeration);
+             	});
+				 $("#failed_pending").DataTable({
+    				    "paging": true,
+        				"searching": true,
+        				'autowidth': true,
+        				"ordering": false,
+        				"lengthMenu": [10, 25, 50, 75, 100],
 						"buttons": [
         						'selectAll',
         						'selectNone'

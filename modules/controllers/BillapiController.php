@@ -90,12 +90,12 @@ class BillapiController extends Hcontroller
     $query="SELECT p.AIRPAY_MERCHANT_ID,p.AIRPAY_USERNAME,p.AIRPAY_PASSWORD,p.AIRPAY_SECRET_KEY from tbl_partner_master as p JOIN tbl_user_master as u ON p.PARTNER_ID = u.PARTNER_ID WHERE u.USER_ID=:user_id";
     $config = $connection
     ->createCommand($query);
-    $config->bindValue(':user_id',$data->customer_id);
+    $config->bindValue(':user_id',$data2->CUSTOMER_ID);
     $config_data = $config->queryAll();
     $chk = new Checksum();
     $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-    $checksum = md5($data2->USER_ID."~".$data2->CUSTOMER_ID."~".$data2->ACCOUNTID."~".$data2->BILLAMOUNT."~".$data2->BILLID."~".$data2->BILLDUEDATE."~".$data2->BILLNUMBER."~".$data2->BILLERNAME."~".$data2->REGISTERID."~".$data2->BILLRSPID."~".$data2->REFERENCE_NUMBER);
-    if($privatekey !== $data2->PRIVATEKEY || $checksum != $data2->CHECKSUM){
+    $checksum = md5($data2->USER_ID."~".$data2->CUSTOMER_ID."~".$data2->ACCOUNTID."~".$data2->BILLAMOUNT."~".$data2->BILLID."~".$data2->BILLDUEDATE."~".$data2->BILLNUMBER."~".$data2->BILLERNAME."~".$data2->REGISTERID."~".$data2->BILLRSPID."~".$data2->REQUESTNUMBER);
+    if($privatekey != $data2->PRIVATEKEY || $checksum != $data2->CHECKSUM){
       return json_encode(['status'=>400,"message"=>"Error in Authentication"]);
     } else {
       $model= new TblProviderBillDetails();
@@ -135,6 +135,13 @@ class BillapiController extends Hcontroller
       $update_status = $connection->createCommand()
       ->update('tbl_provider_bill_details', ['PAYMENT_STATUS'=>$status,'BANK_REF_PAYMENT_NUMBER'=>$data2->BANKREFNUMBER], 'ACCOUNT_NO='.$data2->AUTHENTICATOR.' AND BILL_ID='.$data2->VIEW_BILL_RSP_ID)
       ->execute();
+      if($data2->STATUS == 'N'){
+        $query2 = "INSERT into tbl_provider_bill_details (PROVIDER_BILL_UPLOAD_DETAILS_ID,PROVIDER_ID,REF_NO,REGISTER_BILLER_FLAG,REMOVED,IS_REGISTER,AMOUNT,UTILITY_ID,USER_ID,RESPONSE_NOT_RECIEVED,ACCOUNT_NO,DETAILS,BANK_BILL_ID,BILL_NUMBER,BILL_ID,DUE_DATE,FNAME,LNAME,EMAIL)  SELECT PROVIDER_BILL_UPLOAD_DETAILS_ID,PROVIDER_ID,REF_NO,REGISTER_BILLER_FLAG,REMOVED,IS_REGISTER,AMOUNT,UTILITY_ID,USER_ID,RESPONSE_NOT_RECIEVED,ACCOUNT_NO,DETAILS,BANK_BILL_ID,BILL_NUMBER,BILL_ID,DUE_DATE,FNAME,LNAME,EMAIL FROM tbl_provider_bill_details WHERE ACCOUNT_NO=:account_no AND BILL_ID =:bill_id";
+        $insert_fail_account =  $connection->createCommand($query2);
+        $insert_fail_account->bindValue(':account_no',$data2->AUTHENTICATOR);
+        $insert_fail_account->bindValue(':bill_id',$data2->VIEW_BILL_RSP_ID);
+        $insert_fail_account_data = $insert_fail_account->execute();
+      }
       if($update_status){
         return json_encode(['status'=>200,"message"=>"UPLOADED SUCCESSFULLY"]);
       } else{
