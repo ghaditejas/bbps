@@ -8,4 +8,14 @@
             </div>
         </div>
     </div>
+    <script type="text/javascript" src="/partnerpay/modules/resources/js/jquery.js"></script>
+    <script>
+    $(document).ready(function(){
+        var provider_id = "<?php echo $provider; ?>";
+        var upload_error = '<?php echo $upload_error; ?>';
+        if(provider_id && upload_error){
+            window.open('/partnerpay/web/bbps/default/download_csv_file?provider='+provider_id+'&errors='+upload_error);
+          }
+    });
+    </script>
 </div>
