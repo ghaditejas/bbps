@@ -33,7 +33,7 @@ class BillapiController extends Hcontroller
     $log_file_data = $filename.'/log_' . date('d-M-Y') . '.log';
     file_put_contents($log_file_data, $data , FILE_APPEND);
   }
-
+  
   public function actionAccount_register_response(){
     $post = Yii::$app->request->rawBody;
     $data2 = json_decode($post);
@@ -147,6 +147,36 @@ class BillapiController extends Hcontroller
       } else{
         return json_encode(['status'=>400,"message"=>"ERROR IN UPLOADING"]);
       }
+    }
+  }
+  
+  public function actionVerify_register_no(){
+    $connection = Yii::$app->db;
+    $query="Select b.PROVIDER_BILL_DETAILS_ID,b.INVOICE_ID,b.PROVIDER_ID,b.ACCOUNT_NO,b.USER_ID from tbl_provider_bill_details as b JOIN tbl_registered_account as r on b.ACCOUNT_NO=r.ACCOUNT_NO where r.IS_REGISTERED=0";
+    $verify_register = $connection
+    ->createCommand($query);
+    $verify_register_data = $verify_register->queryAll();
+    foreach($verify_register_data as $key=>$value){
+      echo "<pre>";
+      $api_data= [  
+        "requestid"=>$value['PROVIDER_BILL_DETAILS_ID'],
+        "privatekey"=>"",
+        "mercid"=>"245",
+        "checksum"=>"",
+        "customerid"=>$value['USER_ID'],
+        "billerid"=>$value['PROVIDER_ID'],
+        "account_id"=>$value['ACCOUNT_NO']
+      ];
+      $apidata= json_encode($api_data);
+      $curl = curl_init("https://devel-payments.airpayme.com/bbps/verifybiller.php");
+    curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
+    //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curl, CURLOPT_POST, 1);
+    curl_setopt($curl, CURLOPT_POSTFIELDS,$apidata);
+    $curl_response = curl_exec($curl);
+    curl_close($curl);
+    print_r($curl_response);
     }
   }
 }

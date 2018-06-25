@@ -29,7 +29,30 @@ class DefaultController extends HController
     }
   }
   
-  public function actionIndex()
+  public function actionIndex(){
+    $data=Yii::$app->user->identity;
+    $connection = Yii::$app->db;
+    $query="SELECT count(distinct(`INVOICE_ID`)) as PAID FROM `tbl_provider_bill_details` WHERE `PAYMENT_STATUS`!= '' AND USER_ID=:user_id";
+    $paid = $connection
+    ->createCommand($query);
+    $paid->bindValue(':user_id',$data['USER_ID']);
+    $paid_count = $paid->queryAll();
+
+    $query1="SELECT count(distinct(`INVOICE_ID`)) as UNPAID FROM `tbl_provider_bill_details` WHERE `PAYMENT_STATUS`= '' AND INVOICE_ID != 0 AND USER_ID=:user_id";
+    $unpaid = $connection
+    ->createCommand($query1);
+    $unpaid->bindValue(':user_id',$data['USER_ID']);
+    $unpaid_count = $unpaid->queryAll();
+
+    $query2="SELECT count(distinct(b.INVOICE_ID)) as INVOICE,u.utility_name FROM `tbl_provider_bill_details` as b JOIN tbl_utility as u ON b.`UTILITY_ID` = u.utility_id WHERE b.USER_ID=:user_id AND INVOICE_ID != 0 GROUP BY b.UTILITY_ID";
+    $total_invoice = $connection
+    ->createCommand($query2);
+    $total_invoice->bindValue(':user_id',$data['USER_ID']);
+    $total_invoice_utility = $total_invoice->queryAll();
+    return $this->render('dashboard',array('paid'=>$paid_count[0]['PAID'],'unpaid'=>$unpaid_count[0]['UNPAID'],'invoices'=>$total_invoice_utility));
+  }
+
+  public function actionBiller()
   {
     $utilities = TblUtility::find()->all();
     return $this->render('index',array('utilities'=>$utilities));
@@ -158,7 +181,7 @@ class DefaultController extends HController
     if($response->STATUS=="200"){
       return $this->render($template,array('provider'=>Yii::$app->request->post('providers'),'upload_error'=>json_encode($upload_error)));
     } else {
-      return $this->render($template);
+      return $this->render($template,array('provider'=>Yii::$app->request->post('providers'),'upload_error'=>json_encode($upload_error)));
     }
   }
   
@@ -293,37 +316,6 @@ class DefaultController extends HController
     
   }
   
-  /* public function actionBill_data_response(){
-    $post = Yii::$app->request->rawBody;
-    $log_data = "Bill DATA RESPONSE : ".$post;
-    $this->writeLog("Log_Data",$log_data);
-    $data2 = json_decode($post);
-    $connection = Yii::$app->db;
-    $query="SELECT p.AIRPAY_MERCHANT_ID,p.AIRPAY_USERNAME,p.AIRPAY_PASSWORD,p.AIRPAY_SECRET_KEY from tbl_partner_master as p JOIN tbl_user_master as u ON p.PARTNER_ID = u.PARTNER_ID WHERE u.USER_ID=:user_id";
-    $config = $connection
-    ->createCommand($query);
-    $config->bindValue(':user_id',$data2->CUSTOMER_ID);
-    $config_data = $config->queryAll();
-    $chk = new Checksum();
-    $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-    $checksum = md5($data2->USER_ID."~".$data2->CUSTOMER_ID."~".$data2->ACCOUNTID."~".$data2->BILLAMOUNT."~".$data2->BILLID."~".$data2->BILLDUEDATE."~".$data2->BILLNUMBER."~".$data2->BILLERNAME."~".$data2->REGISTERID."~".$data2->BILLRSPID."~".$data2->REQUESTNUMBER);
-    if($privatekey != $data2->PRIVATEKEY || $checksum != $data2->CHECKSUM){
-      return json_encode(['status'=>400,"message"=>"Error in Authentication"]);
-    } else {
-      $model= new TblProviderBillDetails();
-      $connection = Yii::$app->db;  
-      $connection->createCommand()
-      ->update('tbl_provider_bill_details', ['DUE_DATE'=>date('Y-m-d H:i:s',strtotime($data2->BILLDUEDATE)),'AMOUNT'=>$data2->BILLAMOUNT,'REF_NO'=>$data2->REGISTERID,'BANK_BILL_ID'=>$data2->BILLID,'BILL_NUMBER'=>$data2->BILLNUMBER,'BILL_ID'=>$data2->BILLRSPID,'RESPONSE_NOT_RECIEVED'=>0], 'ACCOUNT_NO='.$data2->ACCOUNTID.' AND PROVIDER_BILL_DETAILS_ID='.$data2->REQUESTNUMBER)
-      ->execute();
-      $msg=$this->notification($data2->Invoice_no);
-      if(isset($msg)){
-        return json_encode(['status'=>200,"message"=>"UPLOADED SUCCESSFULLY"]);
-      } else {
-        return json_encode(['status'=>400,"message"=>"ERROR IN UPLOADING"]);
-      }
-    }
-  }*/
-  
   public function actionListing($invoice_id=""){
     $connection = Yii::$app->db;
     $query="SELECT utility_id,utility_name from tbl_utility where is_disabled='n'";
@@ -394,7 +386,7 @@ class DefaultController extends HController
   public function actionDeletemobile(){
     $connection = Yii::$app->db;
     $invoice_mobile_delete = $connection->createCommand()
-    ->update('tbl_provider_bill_details', ['REMOVED' => 'y'], 'INVOICE_ID='.Yii::$app->request->post('invoice_id').' AND ACCOUNT_NO='.Yii::$app->request->post('mobile_no'))->execute();
+    ->update('tbl_provider_bill_details', ['REMOVED' => 'y','INVOICE_ID'=> " "], 'INVOICE_ID='.Yii::$app->request->post('invoice_id').' AND ACCOUNT_NO='.Yii::$app->request->post('mobile_no'))->execute();
     echo $invoice_data;
     if($invoice_mobile_delete){
       $invoice = $connection
@@ -699,18 +691,21 @@ class DefaultController extends HController
     }
     public function actionGenerate_bill_receipt($bill_details_id) {
       $connection = Yii::$app->db;
-      $query="SELECT b.BANK_REF_PAYMENT_NUMBER,b.ACCOUNT_NO,b.PAYMENT_STATUS,b.AMOUNT,tr.PAY_MODE from tbl_provider_bill_details as b JOIN tbl_transcation_details as tr on tr.INVOICE_ID = b.INVOICE_ID where b.PROVIDER_BILL_DETAILS_ID=:bill_details_id";
+      $query="SELECT b.BANK_REF_PAYMENT_NUMBER,b.ACCOUNT_NO,b.PAYMENT_STATUS,b.AMOUNT,b.FNAME,b.LNAME,b.EMAIL,tr.PAY_MODE from tbl_provider_bill_details as b JOIN tbl_transcation_details as tr on tr.INVOICE_ID = b.INVOICE_ID where b.PROVIDER_BILL_DETAILS_ID=:bill_details_id";
       $receipt = $connection
       ->createCommand($query);
       $receipt->bindValue(':bill_details_id',$bill_details_id);
       $receipt_data = $receipt->queryAll();
-      
-      if($receipt_data[0]['PAY_MODE'] == 'ppc'){
-        $calculatedAmount = ( 1.10 * $receipt_data[0]['AMOUNT']) / 100;
-        $b_chgs = $calculatedAmount * taxRate;
-        $total_charge = $calculatedAmount+$b_chgs;
-      }
-      
+      $taxRate = 0.18;
+      $data=Yii::$app->user->identity;
+      $get_charges = $connection
+      ->createCommand("Select CHARGES,MODES from tbl_charges where USER_ID=:user_id");
+      $get_charges->bindValue(':user_id', $data['USER_ID']);
+      $get_charges_data = $get_charges->queryAll();
+      $charge = json_decode($get_charges_data[0]['CHARGES'],true);
+      $calculatedAmount = ($charge[$receipt_data[0]['PAY_MODE']] * $receipt_data[0]['AMOUNT']) / 100;
+      $b_chgs = $calculatedAmount * $taxRate;
+      $total_charge = $calculatedAmount+$b_chgs;
       
       $content = $this->renderPartial('receipt-bbps',array('receipt'=>$receipt_data[0],'charge'=>$total_charge));
       $pdf = new Pdf([

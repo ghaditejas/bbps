@@ -32,12 +32,12 @@
 											<tr>
 												<td width="160" valign="top">Name of the customer</td>
 												<td width="5" valign="top"> :</td>
-												<td>#customername#</td>
+												<td><?php echo $receipt['FNAME']." ".$receipt['LNAME']; ?></td>
 											</tr>
 											<tr>
 												<td width="160" valign="top">Biller Name</td>
 												<td width="5" valign="top"> :</td>
-												<td>#billername#</td>
+												<td><?php echo $receipt['FNAME']." ".$receipt['LNAME']; ?></td>
 											</tr>
 											<tr>
 												<td width="160" valign="top">BBPS Transaction Ref ID </td>
@@ -60,7 +60,7 @@
 											<tr>
 												<td width="160" valign="top">Email </td>
 												<td width="5" valign="top"> :</td>
-												<td>#email#</td>
+												<td><?php echo $receipt['EMAIL'] ?></td>
 											</tr>
 										</table>
 									</td>
