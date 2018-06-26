@@ -150,33 +150,141 @@ class BillapiController extends Hcontroller
     }
   }
   
-  public function actionVerify_register_no(){
-    $connection = Yii::$app->db;
-    $query="Select b.PROVIDER_BILL_DETAILS_ID,b.INVOICE_ID,b.PROVIDER_ID,b.ACCOUNT_NO,b.USER_ID from tbl_provider_bill_details as b JOIN tbl_registered_account as r on b.ACCOUNT_NO=r.ACCOUNT_NO where r.IS_REGISTERED=0";
-    $verify_register = $connection
-    ->createCommand($query);
-    $verify_register_data = $verify_register->queryAll();
-    foreach($verify_register_data as $key=>$value){
-      echo "<pre>";
-      $api_data= [  
-        "requestid"=>$value['PROVIDER_BILL_DETAILS_ID'],
-        "privatekey"=>"",
-        "mercid"=>"245",
-        "checksum"=>"",
-        "customerid"=>$value['USER_ID'],
-        "billerid"=>$value['PROVIDER_ID'],
-        "account_id"=>$value['ACCOUNT_NO']
-      ];
-      $apidata= json_encode($api_data);
-      $curl = curl_init("https://devel-payments.airpayme.com/bbps/verifybiller.php");
-    curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
-    //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($curl, CURLOPT_POST, 1);
-    curl_setopt($curl, CURLOPT_POSTFIELDS,$apidata);
-    $curl_response = curl_exec($curl);
-    curl_close($curl);
-    print_r($curl_response);
-    }
-  }
+  // public function actionVerify_register_no(){
+  //   $connection = Yii::$app->db;
+  //   $query="Select b.PROVIDER_BILL_DETAILS_ID,b.INVOICE_ID,b.PROVIDER_ID,b.ACCOUNT_NO,b.USER_ID from tbl_provider_bill_details as b JOIN tbl_registered_account as r on b.ACCOUNT_NO=r.ACCOUNT_NO where r.IS_REGISTERED=0";
+  //   $verify_register = $connection
+  //   ->createCommand($query);
+  //   $verify_register_data = $verify_register->queryAll();
+  //   foreach($verify_register_data as $key=>$value){
+  //     $query1="SELECT p.AIRPAY_MERCHANT_ID,p.AIRPAY_USERNAME,p.AIRPAY_PASSWORD,p.AIRPAY_SECRET_KEY from tbl_partner_master as p JOIN tbl_user_master as u ON p.PARTNER_ID = u.PARTNER_ID WHERE u.USER_ID=:user_id";
+  //     $config = $connection
+  //     ->createCommand($query1);
+  //     $config->bindValue(':user_id',$value['USER_ID']);
+  //     $config_data = $config->queryAll();
+  //     $chk = new Checksum();
+  //     $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+  //     $checksum = md5($data2->USER_ID."~".$data2->CUSTOMER_ID."~".$data2->ACCOUNTID."~".$data2->BILLAMOUNT."~".$data2->BILLID."~".$data2->BILLDUEDATE."~".$data2->BILLNUMBER."~".$data2->BILLERNAME."~".$data2->REGISTERID."~".$data2->BILLRSPID."~".$data2->REQUESTNUMBER);
+  //     $api_data= [  
+  //       "requestid"=>$value['PROVIDER_BILL_DETAILS_ID'],
+  //       "privatekey"=>$privatekey,
+  //       "mercid"=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+  //       "checksum"=>$checksum,
+  //       "customerid"=>$value['USER_ID'],
+  //       "billerid"=>$value['PROVIDER_ID'],
+  //       "account_id"=>$value['ACCOUNT_NO']
+  //     ];
+  //     $apidata= json_encode($api_data);
+  //     $curl = curl_init("https://devel-payments.airpayme.com/bbps/verifybiller.php");
+  //     curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
+  //     //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+  //     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+  //     curl_setopt($curl, CURLOPT_POST, 1);
+  //     curl_setopt($curl, CURLOPT_POSTFIELDS,$apidata);
+  //     $curl_response = curl_exec($curl);
+  //     curl_close($curl);
+  //     $data2 = json_decode($curl_response);
+  //     $get_provider = $connection->createCommand('Select PROVIDER_ID from tbl_provider_bill_details where ACCOUNT_NO=:account_no AND PROVIDER_BILL_DETAILS_ID=:provider_bill_details_id');
+  //     $get_provider->bindValue(':account_no',$data2->ACCOUNTID);
+  //     $get_provider->bindValue(':provider_bill_details_id',$data2->REQUESTNUMBER);
+  //     $get_provider_data =  $get_provider->queryAll();
+  //     $status = $connection->createCommand()
+  //     ->update('tbl_registered_account', ['REF_NO'=>$data2->BILLERACCOUNTID,'IS_REGISTERED'=>1], 'ACCOUNT_NO='.$data2->ACCOUNTID.' AND PROVIDE_ID='.$get_provider_data[0]['PROVIDER_ID'])
+  //     ->execute();
+  //   }
+  // }
+  
+  // public function actionVerify_view_bill(){
+  //   $connection = Yii::$app->db;
+  //   $query="Select b.PROVIDER_BILL_DETAILS_ID,b.INVOICE_ID,b.PROVIDER_ID,b.ACCOUNT_NO,b.USER_ID from tbl_provider_bill_details as b JOIN tbl_registered_account as r on b.ACCOUNT_NO=r.ACCOUNT_NO where b.RESPONSE_NOT_RECIEVED=1";
+  //   $verify_view_bill = $connection
+  //   ->createCommand($query);
+  //   $verify_view_bill_data = $config->queryAll();
+  //   foreach($verify_view_bill_data as $key=>$value){
+  //     $query1="SELECT p.AIRPAY_MERCHANT_ID,p.AIRPAY_USERNAME,p.AIRPAY_PASSWORD,p.AIRPAY_SECRET_KEY from tbl_partner_master as p JOIN tbl_user_master as u ON p.PARTNER_ID = u.PARTNER_ID WHERE u.USER_ID=:user_id";
+  //     $config = $connection
+  //     ->createCommand($query1);
+  //     $config->bindValue(':user_id',$value['USER_ID']);
+  //     $config_data = $config->queryAll();
+  //     $chk = new Checksum();
+  //     $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+  //     $checksum = md5($data2->USER_ID."~".$data2->CUSTOMER_ID."~".$data2->ACCOUNTID."~".$data2->BILLAMOUNT."~".$data2->BILLID."~".$data2->BILLDUEDATE."~".$data2->BILLNUMBER."~".$data2->BILLERNAME."~".$data2->REGISTERID."~".$data2->BILLRSPID."~".$data2->REQUESTNUMBER);
+  //     $api_data = [  
+  //       "requestid"=>$value['PROVIDER_BILL_DETAILS_ID'],
+  //       "privatekey"=>$privatekey,
+  //       "mercid"=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+  //       "checksum"=>$checksum,
+  //       "customerid"=>$value['USER_ID'],
+  //       // "registerid"=>"196",
+  //       "accountid"=>$value['ACCOUNT_NO']
+  //     ];
+  //     $apidata= json_encode($api_data);
+  //     $curl = curl_init("https://devel-payments.airpayme.com/bbps/verifybill.php");
+  //     curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
+  //     //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+  //     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+  //     curl_setopt($curl, CURLOPT_POST, 1);
+  //     curl_setopt($curl, CURLOPT_POSTFIELDS,$apidata);
+  //     $curl_response = curl_exec($curl);
+  //     curl_close($curl);
+  //     $data2 = json_decode($curl_response);
+  //     $status = $connection->createCommand()
+  //     ->update('tbl_provider_bill_details', ['DUE_DATE'=>date('Y-m-d H:i:s',strtotime($data2->BILLDUEDATE)),'AMOUNT'=>$data2->BILLAMOUNT,'REF_NO'=>$data2->BBPS_REGISTER_RES_ID,'BANK_BILL_ID'=>$data2->BILLID,'BILL_NUMBER'=>$data2->BILLNUMBER,'BILL_ID'=>$data2->VIEW_BILL_RSP_ID,'RESPONSE_NOT_RECIEVED'=>0], 'ACCOUNT_NO='.$data2->ACCOUNTID.' AND PROVIDER_BILL_DETAILS_ID='.$data2->REQUESTNUMBER)
+  //     ->execute();
+  //   }
+  // }
+  
+  // public function actionVerify_make_payment(){
+  //   $connection = Yii::$app->db;
+  //   $query="Select b.INVOICE_ID,b.BILL_ID,b.AMOUNT,b.ACCOUNT_NO,b.USER_ID,t.AIRPAY_ID, from tbl_provider_bill_details as b JOIN tbl_transcation_details as t on b.INVOICE_ID=t.INVOICE_ID where b.PAYMENT_STATUS='pending'";
+  //   $verify_payment = $connection
+  //   ->createCommand($query);
+  //   $verify_payment_data = $verify_payment->queryAll();
+  //   foreach($verify_payment_data as $key=>$value){
+  //     $query1="SELECT p.AIRPAY_MERCHANT_ID,p.AIRPAY_USERNAME,p.AIRPAY_PASSWORD,p.AIRPAY_SECRET_KEY from tbl_partner_master as p JOIN tbl_user_master as u ON p.PARTNER_ID = u.PARTNER_ID WHERE u.USER_ID=:user_id";
+  //     $config = $connection
+  //     ->createCommand($query1);
+  //     $config->bindValue(':user_id',$value['USER_ID']);
+  //     $config_data = $config->queryAll();
+  //     $chk = new Checksum();
+  //     $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+  //     $checksum = md5($data2->USER_ID."~".$data2->CUSTOMER_ID."~".$data2->ACCOUNTID."~".$data2->BILLAMOUNT."~".$data2->BILLID."~".$data2->BILLDUEDATE."~".$data2->BILLNUMBER."~".$data2->BILLERNAME."~".$data2->REGISTERID."~".$data2->BILLRSPID."~".$data2->REQUESTNUMBER);
+  //     $api_data = [  
+  //       "privatekey"=>$privatekey,
+  //       "mercid"=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+  //       "airpay_id"=>$value['AIRPAY_ID'],
+  //       "checksum"=>$checksum,     
+  //       "viewbillresponseid"=>$value['BILL_ID'],
+  //       "amount"=>$value['AMOUNT']
+  //     ];
+  //   }
+  //   $apidata= json_encode($api_data);
+  //   $curl = curl_init("https://devel-payments.airpayme.com/bbps/verifybill.php");
+  //   curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
+  //   //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+  //   curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+  //   curl_setopt($curl, CURLOPT_POST, 1);
+  //   curl_setopt($curl, CURLOPT_POSTFIELDS,$apidata);
+  //   $curl_response = curl_exec($curl);
+  //   curl_close($curl);
+
+  //   $data2= json_encode($curl_response);
+  //   if($data2->STATUS == 'Y'){
+  //     $status = "success";
+  //   } else if($data2->STATUS == 'N') {
+  //     $status = "fail";
+  //   } else {
+  //     $status = "pending";
+  //   }
+  //   $update_status = $connection->createCommand()
+  //     ->update('tbl_provider_bill_details', ['PAYMENT_STATUS'=>$status,'BANK_REF_PAYMENT_NUMBER'=>$data2->BANKREFNUMBER], 'ACCOUNT_NO='.$data2->AUTHENTICATOR.' AND BILL_ID='.$data2->VIEW_BILL_RSP_ID)
+  //     ->execute();
+  //     if($data2->STATUS == 'N'){
+  //       $query2 = "INSERT into tbl_provider_bill_details (PROVIDER_BILL_UPLOAD_DETAILS_ID,PROVIDER_ID,REF_NO,REGISTER_BILLER_FLAG,REMOVED,IS_REGISTER,AMOUNT,UTILITY_ID,USER_ID,RESPONSE_NOT_RECIEVED,ACCOUNT_NO,DETAILS,BANK_BILL_ID,BILL_NUMBER,BILL_ID,DUE_DATE,FNAME,LNAME,EMAIL)  SELECT PROVIDER_BILL_UPLOAD_DETAILS_ID,PROVIDER_ID,REF_NO,REGISTER_BILLER_FLAG,REMOVED,IS_REGISTER,AMOUNT,UTILITY_ID,USER_ID,RESPONSE_NOT_RECIEVED,ACCOUNT_NO,DETAILS,BANK_BILL_ID,BILL_NUMBER,BILL_ID,DUE_DATE,FNAME,LNAME,EMAIL FROM tbl_provider_bill_details WHERE ACCOUNT_NO=:account_no AND BILL_ID =:bill_id";
+  //       $insert_fail_account =  $connection->createCommand($query2);
+  //       $insert_fail_account->bindValue(':account_no',$data2->AUTHENTICATOR);
+  //       $insert_fail_account->bindValue(':bill_id',$data2->VIEW_BILL_RSP_ID);
+  //       $insert_fail_account_data = $insert_fail_account->execute();
+  //     }
+  // }
 }

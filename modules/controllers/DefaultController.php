@@ -363,7 +363,7 @@ class DefaultController extends HController
   public function actionPayment($invoice_id){
     $connection = Yii::$app->db;
     $invoice = $connection
-    ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
+    ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
     $invoice->bindValue(':invoice_id', $invoice_id);
     $invoice_data = $invoice->queryAll();
     $sum = $this->calculate_sum($invoice_data);

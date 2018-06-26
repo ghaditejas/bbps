@@ -446,4 +446,10 @@ table .status a:hover{text-decoration:none;}
 	/*.onoffswitch-checkbox2:checked + .onoffswitch-label2 .onoffswitch-switch2:after{ font-size:13px; top:5px;/*letter-spacing:-0.5px;} */
 }
 
+.searchable {
+    border: 1px solid #000;
+	width: 196px;
+	background-color: #eee;
+}
+
 

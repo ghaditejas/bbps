@@ -1,11 +1,11 @@
-// $.validator.addMethod('filesize', function () {
-//     console.log($('input[name="bulk_upload"]').val());
-//     if($('input[name="bulk_upload"]').val()!=""){
-//         return ($('input[name="bulk_upload"]')[0].files[0].size<= 1000)
-//     } else {
-//         return true;
-//     }
-// }, 'File size must be less than {0}');
+$.validator.addMethod('filesize', function () {
+    console.log($('input[name="bulk_upload"]').val());
+    if($('input[name="bulk_upload"]').val()!=""){
+        return ($('input[name="bulk_upload"]')[0].files[0].size<= 1000)
+    } else {
+        return true;
+    }
+}, 'File size must be less than {0}');
 $.validator.addMethod("regex",function(value, element, regexp) {
     // console.log('asdasd');
         var check = false;
@@ -28,12 +28,14 @@ $(document).ready(function () {
             fname:{
                 required: function(element){
                     return ($("#bulk_upload").val().length == 0);
-                },    
+                }, 
+                lettersonly: true,   
             },
             lname:{
                 required: function(element){
                     return ($("#bulk_upload").val().length == 0);
                 },
+                lettersonly: true,
             },
             bulk_upload: {
                 required:function(element){
@@ -48,6 +50,7 @@ $(document).ready(function () {
                    return valid; 
                 },
                 extension: "csv",
+                filesize: true
                 
             },
             
@@ -59,16 +62,19 @@ $(document).ready(function () {
             bulk_upload: {
                 required: "Bulk Upload File is Required",
                 extension: "Invalid File Format",
+                filesize:"Bulk Upload Size Not Valid"
             },
             email: {
                 required: "Email is Required",
                 email: "Email format not proper"
             },
             fname :{
-                required: "First Name is required"
+                required: "First Name is required",
+                lettersonly: "Invalid First Name",
             },
             lname :{
-                required: "Last Name is required"
+                required: "Last Name is required",
+                lettersonly: "Invalid Last Name",
             },
         },
         errorPlacement: function(error, element) {

@@ -44,7 +44,7 @@
 	<div id="tabs" class="hidden">		
 	<ul class="nav nav-tabs" role="tablist">
 		<li role="presentation" class="active"><a href="#dislist" id="unpaidlist" aria-controls="dislist" role="tab" data-toggle="tab">Unpaid bill list</a></li>
-		<li role="presentation" ><a href="#unpaidinvoice" id="unpaidinvoicelist" aria-controls="dislist" onClick="unpaidInvoice()" role="tab" data-toggle="tab">Unpaid bill list</a></li>
+		<li role="presentation" ><a href="#unpaidinvoice" id="unpaidinvoicelist" aria-controls="dislist" onClick="unpaidInvoice()" role="tab" data-toggle="tab">Unpaid Invoice list</a></li>
 		<li role="presentation"><a href="#alllist" id="allinvoice" aria-controls="alllist" role="tab" onClick="allInvoice()" data-toggle="tab">All Invoice list</a></li>
 		<li role="presentation"><a href="#registration_failed" id="registerationfailed" aria-controls="alllist" role="tab" onClick="registerationPending()" data-toggle="tab">Registeration Failed/Pending</a></li>
 	</ul>
@@ -74,13 +74,13 @@
 		
 			<div class="removed-table hidden" id="removed">	
 				<div class="tablebox">	
-					<div class="table-responsive">
+					<div>
 					<!-- <input type="button" class="btn btn-primary" value="Pay Selected" style=""> -->
 			<table class="table table-striped table-bordered text-center" id="removed_data">
 			<thead>
 			<tr>
 				<th class="text-center idnum">#</th>
-				<th class="text-center idnum"><input type="checkbox" id="select_all" class="checkbox-inline">Select all</th>
+				<th class="text-center idnum"><input type="checkbox" id="select_all" class="checkbox-inline"></th>
 				<th class="text-center">Account Number</th>
 				<th class="text-center">Due Date</th>
 				<th class="text-center">Total Amount</th>
@@ -115,7 +115,7 @@
 
 		<div role="tabpanel" class="tab-pane" id="unpaidinvoice">
 			<div class="tablebox">	
-			<div class="table-responsive">
+			<div>
 			<table id="unpaid_invoice" class="table table-striped table-bordered text-center">
 			<thead>
 			<tr>
@@ -153,7 +153,7 @@
 	
 		<div role="tabpanel" class="tab-pane" id="alllist">
 			<div class="tablebox">	
-			<div class="table-responsive">
+			<div>
 			<table id="all_invoice" class="table table-striped table-bordered text-center">
 			<thead>
 			<tr>
@@ -193,7 +193,7 @@
 
 	    <div role="tabpanel" class="tab-pane" id="registration_failed">
 			<div class="tablebox">	
-			<div class="table-responsive">
+			<div>
 			<table id="failed_pending" class="table table-striped table-bordered text-center">
 			<thead>
 			<tr>
@@ -352,7 +352,7 @@ function getRecords(){
 				  $('#removed_data tbody').empty();
 				$.each(data, function (key, value) {
                     var remove_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td>'+
-						'<td><input type="checkbox" name="checkbox_bill[]" class="checkbox" value="'+value.PROVIDER_BILL_DETAILS_ID+'" class="checkbox-inline"></td>'+
+						'<td><input type="checkbox" name="checkbox_bill[]" class="checkbox checkbox-inline" value="'+value.PROVIDER_BILL_DETAILS_ID+'" class="checkbox-inline"></td>'+
 						'<td>'+value.ACCOUNT_NO+'</td>'+
 						'<td>'+value.DUE_DATE+'</td>'+
 						'<td class="text-right">'+value.AMOUNT+'</td>'+
@@ -368,8 +368,10 @@ function getRecords(){
 						"buttons": [
         						'selectAll',
         						'selectNone'
-    							],
-     				});
+								],
+								
+					 });
+					 $('div.dataTables_filter input').addClass('searchable')
 			}
 		  });
 		}	
@@ -451,7 +453,8 @@ function allInvoice(){
         						'selectAll',
         						'selectNone'
     							],
-     				});
+					 });
+					 $('div.dataTables_filter input').addClass('searchable')
 			}
 		  });
 		}
@@ -487,7 +490,8 @@ function unpaidInvoice(){
         						'selectAll',
         						'selectNone'
     							],
-     				});
+					 });
+					 $('div.dataTables_filter input').addClass('searchable')
 			}
 		  });
 		}
@@ -528,7 +532,8 @@ function registerationPending(){
         						'selectAll',
         						'selectNone'
     							],
-     				});
+					 });
+					 $('div.dataTables_filter input').addClass('searchable')
 			}
 		  });
 		}

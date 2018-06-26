@@ -2,7 +2,7 @@
 <div class="wrapper">
     <div class="container">
         <div>
-            <h2 style="text-align: center;">Thank You Your Data Has Been Uploaded</h2>
+            <h2 style="text-align: center;">ThankYou your data has been uploaded</h2>
             <div style="text-align: center;">
                 Go to <a href="/partnerpay/web/bbps/default/listing"><b>listing</b></a> to pay the bill
             </div>

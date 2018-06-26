@@ -175,7 +175,7 @@ function getFields(){
                     }
                 });
             });
-             $('#download_csv').empty().append("<a href='/partnerpay/web/bbps/default/download_csv_file?provider="+provider+"' target='_blank' >Download Format</a>")
+             $('#download_csv').empty().append("<a href='/partnerpay/web/bbps/default/download_csv_file?provider="+provider+"' target='_blank' >Download Sample Format</a>")
       }
    });
    }

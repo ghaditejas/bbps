@@ -2,7 +2,7 @@
 <div class="index">
 	<div class="indexpage">
 	<div class="container">
-		<div class="logo">
+		<div class="logo" style="padding: 25px;">
 				<div class="logoimg partnerpay"><img alt="Partnerpay" src="/partnerpay/modules/resources/images/partnerpay-logo.png"/></div>
 				<div class="logoimg banklogo"><img alt="mastercard" src="/partnerpay/modules/resources/images/mastercard.png"/></div>
 			
@@ -35,7 +35,7 @@
 	   <div class="row">		
 	   <input type="hidden" name="_csrf" value="<?=Yii::$app->request->getCsrfToken()?>" />
 	   <input type="hidden" name="invoice_no" value="<?=$invoice_data[0]['INVOICE_ID'];?>" />
-			<div class="col-sm-6">
+			<!-- <div class="col-sm-6">
 				<div class="form-group req">
 					<div class="form-group field-client-first_name required">
 						<label class="control-label" for="merchant-id">Merchant Name</label>
@@ -43,7 +43,7 @@
 						<div class="help-block"></div>
 					</div>
 				</div>
-			</div>
+			</div> -->
 		
 		
 			<div class="col-sm-6">
@@ -57,8 +57,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
-		<div class="row">
+		
 			<div class="col-sm-6">
 				<div class="form-group req">
 					<div class="form-group field-invoice-pay_amount required">
@@ -75,6 +74,8 @@
 					</div>
 				</div>
 			</div>
+			</div>
+		<div class="row">
 
 			<div class="col-sm-6">
 				<div class="form-group req">
@@ -190,7 +191,11 @@ function applyCharge(){
 					dataType:"json",
       				success: function(data) {
                             if(data){
-                                $('#invoice_amount').val(data.sum);
+								if(data.sum==0){
+									window.location.href = '/partnerpay/web/bbps/default/listing';
+								}
+								$('#invoice_amount').val(data.sum);
+								$('#bill_amount').val(data.sum);
                                 $('#'+mobile_no).remove();
                             }
 	  					}
