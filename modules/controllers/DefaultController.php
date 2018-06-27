@@ -735,5 +735,24 @@ class DefaultController extends HController
           echo json_encode($invoice_recieved_data);
           exit;
         }
+
+        public function actionPayment_amount_check(){
+          $connection = Yii::$app->db;
+          $invoice = $connection
+          ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
+          $invoice->bindValue(':invoice_id', Yii::$app->request->post('invoice_id'));
+          $invoice_data = $invoice->queryAll();
+          $sum = $this->calculate_sum($invoice_data);
+          $data=Yii::$app->user->identity;
+          $get_charges = $connection
+          ->createCommand("Select CHARGES from tbl_charges where USER_ID=:user_id");
+          $get_charges->bindValue(':user_id', $data['USER_ID']);
+          $get_charges_data = $get_charges->queryAll();
+          $payment_data = array();
+          $payment_data['sum']=$sum;
+          $payment_data['charges']=$get_charges_data[0]['CHARGES'];
+          echo json_encode($payment_data);
+          exit;
+        }
       }
       

@@ -81,7 +81,7 @@ $(document).ready(function () {
             if (element.attr("name") == "bulk_upload"){
                     error.insertAfter("a.file-input-wrapper");
             } else if (element.attr("name") == "providers"){
-                error.insertBefore(".opclist")
+                error.insertAfter(".page-header")
             } else {
                     error.insertAfter(element);
             }
@@ -157,7 +157,25 @@ $(document).ready(function () {
             }
             },
         submitHandler: function (form) {
-            form.submit();
+            var id= $('#invoice_no').val();
+            $.ajax({
+                url: "/partnerpay/web/bbps/default/payment_amount_check",  
+                data: {invoice_id: id},
+               type: "POST",
+                dataType: "json",
+                success: function(data) {
+                    var charges = JSON.parse(data.charges);
+                    var charge_mode =  $('#payment_mode').val();
+                    calculatedAmount = (charges[charge_mode] * data.sum) / 100;
+                    b_chgs = calculatedAmount * taxRate;
+                    tot_amt = parseFloat(data.sum) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
+                    $('#invoice_amount').val(parseFloat(tot_amt).toFixed(2));
+                    $('#total_amount').val(parseFloat(tot_amt).toFixed(2))
+                    $('#bill_amount').val(data.sum);
+                    form.submit();
+                }
+             });
+            
         }
     });
 });

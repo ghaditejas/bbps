@@ -1,0 +1,6 @@
+ADD BILLER API RESPONSE : {"STATUS":"200","MSG":"Data uploaded successfully"}
+ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Data upload error."}
+ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Data upload error."}
+MAKE PAYMENT DATA RESPONSE : "\t\r\n\n{\"200\":\"Data updated successfully\"}"
+MAKE PAYMENT DATA RESPONSE : "\t\r\n\n{\"200\":\"Data updated successfully\"}"
+ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Account already register.[\"7738894601\"]"}

@@ -34,7 +34,7 @@
        <form class="form" action="/partnerpay/web/bbps/default/pay" id="payment" method="post">
 	   <div class="row">		
 	   <input type="hidden" name="_csrf" value="<?=Yii::$app->request->getCsrfToken()?>" />
-	   <input type="hidden" name="invoice_no" value="<?=$invoice_data[0]['INVOICE_ID'];?>" />
+	   <input type="hidden" name="invoice_no" id="invoice_no" value="<?=$invoice_data[0]['INVOICE_ID'];?>" />
 			<!-- <div class="col-sm-6">
 				<div class="form-group req">
 					<div class="form-group field-client-first_name required">
@@ -81,7 +81,10 @@
 				<div class="form-group req">
 					<div class="form-group field-invoice-pay_amount required">
 						<label class="control-label" for="invoice-pay_amount">Total Amount</label>
-						<input type="text" class="form-control" name="invoice_amount" id="invoice_amount" readonly="readonly" value="<?php if(isset($invoice_amount)){
+						<input type="text" class="form-control" name="total_amount" id="total_amount" readonly="readonly" value="<?php if(isset($invoice_amount)){
+                           echo  $invoice_amount;
+                        } ?>">
+						<input type="hidden" class="form-control" name="invoice_amount" id="invoice_amount" value="<?php if(isset($invoice_amount)){
                            echo  $invoice_amount;
                         } ?>">
 						<div class="help-block"></div>
@@ -131,7 +134,7 @@
         <h4 class="modal-title" id="myModalLabel">Invoice listing</h4>
       </div>
       <div class="modal-body">
-		<div class="tablebox">	
+		<div class="tableboxpopup">	
 			<div class="table-responsive">
 			<table class="table table-striped table-bordered text-center">
 			<thead>
@@ -179,6 +182,7 @@ function applyCharge(){
 	calculatedAmount = (charges[charge_mode] * amount) / 100;
     b_chgs = calculatedAmount * taxRate;
     tot_amt = parseFloat(amount) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
+	$('#total_amount').val(parseFloat(tot_amt).toFixed(2));
 	$('#invoice_amount').val(parseFloat(tot_amt).toFixed(2));
 }
 
@@ -194,7 +198,13 @@ function applyCharge(){
 								if(data.sum==0){
 									window.location.href = '/partnerpay/web/bbps/default/listing';
 								}
-								$('#invoice_amount').val(data.sum);
+								var charges  = <?php echo $charges['CHARGES']; ?>;  
+								var charge_mode =  $('#payment_mode').val();
+								calculatedAmount = (charges[charge_mode] * data.sum) / 100;
+    							b_chgs = calculatedAmount * taxRate;
+    							tot_amt = parseFloat(data.sum) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
+								$('#invoice_amount').val(parseFloat(tot_amt).toFixed(2));
+								$('#total_amount').val(parseFloat(tot_amt).toFixed(2))
 								$('#bill_amount').val(data.sum);
                                 $('#'+mobile_no).remove();
                             }

@@ -1,8 +1,9 @@
-<link rel="stylesheet" href="/partnerpay/modules/resources/css/customs.css" type="text/css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/dataTables.jqueryui.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="/partnerpay/modules/resources/css/customs.css" type="text/css">
 <!-- <link rel="stylesheet" href="/partnerpay/modules/resources/css/dataTables.bootstrap.css"> -->
 <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/jquery.dataTables.min.css"> -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.10.18/css/dataTables.jqueryui.min.css">
+
 <div class="container">
 	
 	<div class="page-header">
@@ -52,18 +53,18 @@
 	<div role="tabpanel" class="tab-pane active" id="dislist">
 				<div class="row">
 							<div class="col-sm-6 col-md-4">
-								<div class="form-group req">
+								<div class="form-group">
 									<div class="form-group required">
-										<label class="control-label" for="">From Date</label>
+										<label class="control-label req" for="">From Date</label>
 										<input type="text" id="from_date" onChange="getRecords()" class="form-control datepicker1" name="frmdate" readonly>
 										<div class="help-block"></div>
 									</div>
 								</div>
 							</div>
 							<div class="col-sm-6 col-md-4">
-								<div class="form-group req">
+								<div class="form-group">
 									<div class="form-group required">
-										<label class="control-label" for="merchant-id">To Date</label>
+										<label class="control-label req" for="merchant-id">To Date</label>
 										<input type="text" id="to_date" onChange="getRecords()" class="form-control datepicker2" name="todate" readonly>
 										<div class="help-block"></div>
 									</div>
@@ -74,7 +75,7 @@
 		
 			<div class="removed-table hidden" id="removed">	
 				<div class="tablebox">	
-					<div>
+					<div class="table-responsive">
 					<!-- <input type="button" class="btn btn-primary" value="Pay Selected" style=""> -->
 			<table class="table table-striped table-bordered text-center" id="removed_data">
 			<thead>
@@ -115,7 +116,7 @@
 
 		<div role="tabpanel" class="tab-pane" id="unpaidinvoice">
 			<div class="tablebox">	
-			<div>
+			<div class="table-responsive">
 			<table id="unpaid_invoice" class="table table-striped table-bordered text-center">
 			<thead>
 			<tr>
@@ -153,7 +154,7 @@
 	
 		<div role="tabpanel" class="tab-pane" id="alllist">
 			<div class="tablebox">	
-			<div>
+			<div class="table-responsive">
 			<table id="all_invoice" class="table table-striped table-bordered text-center">
 			<thead>
 			<tr>
@@ -193,7 +194,7 @@
 
 	    <div role="tabpanel" class="tab-pane" id="registration_failed">
 			<div class="tablebox">	
-			<div>
+			<div class="table-responsive">
 			<table id="failed_pending" class="table table-striped table-bordered text-center">
 			<thead>
 			<tr>
@@ -238,7 +239,8 @@
                     <h4 class="modal-title" id="myModalLabel">Invoice listing</h4>
                 </div>
                 <div class="modal-body">
-                    <div class="tablebox">
+				   <span style="color:red;">The failed transaction amount has been refunded to your account</span>
+                    <div class="tableboxpopup">
                         <div class="table-responsive">
                             <table class="table table-striped table-bordered text-center" id="paid_invoice">
                                 <thead>
@@ -264,7 +266,7 @@
                                     
                                 </tbody>
                             </table>
-                        </div>
+						</div>
                     </div>
                 </div>
             </div>
@@ -285,7 +287,9 @@
 <script>
     $(document).ready(function(){
 	 	$('#select_all').click(function(){
-			 $('.checkbox').prop('checked',$(this).prop('checked'));
+			 var dataTable = $('#removed_data').DataTable();
+		dataTable.rows().nodes().to$().find('.checkbox').prop('checked',$(this).prop('checked'));
+			//  $('input', $('#removed_data').fnGetNodes()).prop('checked',chk);
 	 	});
 	 	$('body').on('click', 'input.checkbox:checkbox', function() {
 			if (!this.checked) {
@@ -369,7 +373,6 @@ function getRecords(){
         						'selectAll',
         						'selectNone'
 								],
-								
 					 });
 					 $('div.dataTables_filter input').addClass('searchable')
 			}
@@ -381,9 +384,11 @@ function getRecords(){
 function pay(){
 	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
 	var arr = [];
-        $('input.checkbox:checkbox:checked').each(function () {
+	var dataTable = $('#removed_data').DataTable();
+	dataTable.rows().nodes().to$().find('input.checkbox:checkbox:checked').each(function () {
             arr.push($(this).val());
-        });
+		});
+		console.log(arr);
 		if(arr.length>0){
 			$.ajax({
       			url: "/partnerpay/web/bbps/default/add_mobile",  
@@ -401,6 +406,7 @@ function pay(){
 
 function getDetails(invoice_id){
 	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
+	$('#paid_invoice tbody').empty();
 	$.ajax({
       			url: "/partnerpay/web/bbps/default/get_invoice_data",  
       			data: {"invoice_id":invoice_id,"_csrf":csrf_token},
