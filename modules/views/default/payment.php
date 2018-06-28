@@ -198,11 +198,16 @@ function applyCharge(){
 								if(data.sum==0){
 									window.location.href = '/partnerpay/web/bbps/default/listing';
 								}
-								var charges  = <?php echo $charges['CHARGES']; ?>;  
-								var charge_mode =  $('#payment_mode').val();
-								calculatedAmount = (charges[charge_mode] * data.sum) / 100;
-    							b_chgs = calculatedAmount * taxRate;
-    							tot_amt = parseFloat(data.sum) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
+								var charges  = <?php echo $charges['CHARGES']; ?>;
+									var charge_mode =  $('#payment_mode').val();	  
+								if(charge_mode){
+									taxRate = 0.18;
+									calculatedAmount = (charges[charge_mode] * data.sum) / 100;
+    								b_chgs = calculatedAmount * taxRate;
+    								tot_amt = parseFloat(data.sum) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
+								}else{
+									tot_amt = data.sum;
+								}
 								$('#invoice_amount').val(parseFloat(tot_amt).toFixed(2));
 								$('#total_amount').val(parseFloat(tot_amt).toFixed(2))
 								$('#bill_amount').val(data.sum);

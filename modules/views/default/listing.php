@@ -37,7 +37,7 @@
 				</div>
 				<div class="row">
 					<div class="col-sm-6 col-md-4">
-						<input type="submit" class="btn btn-primary fliterbtn" value="Submit">
+						<button type="submit" class="btn btn-primary fliterbtn" value="Submit">Submit</button>
 					</div>
 				</div>
 			 </form>
