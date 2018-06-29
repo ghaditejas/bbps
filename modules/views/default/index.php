@@ -1,6 +1,13 @@
 <link rel="stylesheet" href="/partnerpay/modules/resources/css/customs.css" type="text/css">
+
 <div class="wrapper">
     <div class="container">
+    <?php if(Yii::$app->session->hasFlash('error')){?>
+        <div class="alert alert-error alert-dismissable">
+        <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+        <?= Yii::$app->session->getFlash('error') ?>
+        </div>
+    <?php }?>
         <div class="page-header">
             <h4>Bharat Bill Payment System</h4>
             <div class="fieldstx closetab">
@@ -143,9 +150,14 @@ function setUtility(id,name){
       success: function(data) {
             $('#providers').empty();
            $.each(data, function (key, value) {
-                    var provider_list='<li><label class="radio-inline"><input type="radio" onClick="getFields()" name="providers" id="providers" value="'+value.id+'">'+value.name+'</label></li>';
+                    var provider_list='<li><label class="radio-inline"><input type="radio" onClick="getFields()"';
+                    if(key == 0 ){
+                        provider_list = provider_list+'checked="checked"';
+                    } 
+                    provider_list = provider_list+'name="providers" id="providers" value="'+value.id+'">'+value.name+'</label></li>';
                     $('#providers').append(provider_list);
              });
+             getFields();
       }
    });
 }

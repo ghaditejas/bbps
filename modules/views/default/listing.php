@@ -419,9 +419,9 @@ function getDetails(invoice_id){
 						if(value.PAYMENT_STATUS == "success"){
 							paid_invoice_data = paid_invoice_data+'<td class="action"><div class="bbox"><a href="/partnerpay/web/bbps/default/generate_bill_receipt?bill_details_id='+value.PROVIDER_BILL_DETAILS_ID+'" target="_blank" class="btn btn-success"><span>RECEIPT</span></a></div></td></tr>';
 						} else if(value.PAYMENT_STATUS == 'fail') {
-							paid_invoice_data = paid_invoice_data+'<td class="action"><div class="bbox"><a href="javascript:void(0)" class="btn btn-danger"><span>FAILED</span></a></div></td></tr>';
+							paid_invoice_data = paid_invoice_data+'<td class="action"><div class="bbox textbg"><span class="failed">FAILED</span></div></td></tr>';
 						} else {
-							paid_invoice_data = paid_invoice_data+'<td class="action"><div class="bbox"><a href="javascript:void(0)" class="btn btn-warning"><span>IN PROCESS</span></a></div></td></tr>';
+							paid_invoice_data = paid_invoice_data+'<td class="action"><div class="bbox textbg"><span class="inprocess">IN PROCESS</span></div></td></tr>';
 						}
 						$('#paid_invoice tbody').append(paid_invoice_data);
 					  });
@@ -515,16 +515,16 @@ function registerationPending(){
       		dataType: "json",
       		success: function(data) {
 				  $('#failed_pending').removeClass('hidden');
-				  if($.fn.DataTable.isDataTable( '#all_invoice' )){
+				  if($.fn.DataTable.isDataTable( '#failed_pending' )){
 				  	$("#failed_pending").DataTable().destroy();
 				  }
 				  $('#failed_pending tbody').empty();
 				$.each(data, function (key, value) {
                     var failed_registeration='<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.ACCOUNT_NO+'</td><td>'+value.provider_name+'</td><td>'+value.utility_name+'</td>';
 					if(value.PAYMENT_STATUS == 'fail') {
-						failed_registeration = failed_registeration+'<td class="action"><div class="bbox"><a href="javascript:void(0)" class="btn btn-danger"><span>FAILED</span></a></div></td></tr>';
+						failed_registeration = failed_registeration+'<td class="action"><div class="bbox textbg"><span class="failed">FAILED</span></div></td></tr>';
 						} else {
-							failed_registeration = failed_registeration+'<td class="action"><div class="bbox"><a href="javascript:void(0)" class="btn btn-warning"><span>IN PROCESS</span></a></div></td></tr>';
+							failed_registeration = failed_registeration+'<td class="action"><div class="bbox textbg"><span class="inprocess">IN PROCESS</span></div></td></tr>';
 						}
                     $('#failed_pending tbody').append(failed_registeration);
              	});

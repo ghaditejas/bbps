@@ -16,9 +16,6 @@ $.validator.addMethod("regex",function(value, element, regexp) {
 $(document).ready(function () {
     $("#bill_details").validate({
         rules: {
-            providers: {
-                required: true,
-            },
             email: {
                 required: function(element){
                     return ($("#bulk_upload").val().length == 0);
@@ -56,9 +53,6 @@ $(document).ready(function () {
             
         },
         messages: {
-            providers: {
-                required: "Provider is Required",
-            },
             bulk_upload: {
                 required: "Bulk Upload File is Required",
                 extension: "Invalid File Format",

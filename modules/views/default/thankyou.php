@@ -1,7 +1,7 @@
 <div class="wrapper">
     <div class="container">
         <div>
-            <h2 style="text-align: center;">Thankyou your payment is done</h2>
+            <h2 style="text-align: center;">Thank you your payment is done</h2>
         </div>
     </div>
 </div>

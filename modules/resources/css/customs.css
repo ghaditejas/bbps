@@ -302,6 +302,9 @@ table .status a:hover{text-decoration:none;}
     text-align: right;
     font-weight: normal;
 }
+.payformbox .req label.error:after {
+    display: none;
+}
 .invoice-head {
     display: block;
     max-width: 640px;
@@ -497,6 +500,30 @@ table.dataTable {
 }
 .dataTables_wrapper .dataTables_info{
 	margin-top: 15px;
+}
+
+.textbg{
+    padding: 10px;
+}
+.textbg span{
+    padding: 8px;
+    color: #fff;
+} 
+.textbg span.inprocess{
+  background-color: #ec971f;
+} 
+.textbg span.failed{
+   background-color: #c9302c;
+} 
+.alert{background-color: #fcdfdf;
+    color: #e20e0e;}
+.alert .close{
+    color: #e60e0e;
+    opacity: .5;
+}
+#termandcond .modal-body{
+    max-height: 400px;
+    overflow: auto;
 }
 @media(min-width:768px) {
 	.navbar-nav > li > .dropdown-menu:before{ content:''; display:block;/*width:13px;*/height:7px; margin-top:-7px; margin-right:-96px; background:url("../images/dropdown-menu.png") bottom center no-repeat; }

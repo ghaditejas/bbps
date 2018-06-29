@@ -105,6 +105,7 @@ class DefaultController extends HController
         $fields_data=array();
         $handle = fopen( Yii::$app->getBasePath()."/modules/resources/upload/".$uploadedFile_data['file_name'], "r");
         fgetcsv($handle);
+        if(fgetcsv($handle, 1024, ",")){
         while (($fileop = fgetcsv($handle, 1024, ",")) !== false) 
         {
           
@@ -129,8 +130,13 @@ class DefaultController extends HController
           }
         }
         $template="data_uploaded";
+      } else {
+        Yii::$app->getSession()->setFlash('error', "Empty File Uploaded");
+        return $this->render('index',array('utilities'=>TblUtility::find()->all()));
+        }
       } else{
-        echo "Error while uploading file";
+        Yii::$app->getSession()->setFlash('error', "Error while uploading file");
+        return $this->render('index',array('utilities'=>TblUtility::find()->all()));
       }
     } else {
       if(Yii::$app->request->post('register')){
@@ -207,7 +213,8 @@ class DefaultController extends HController
     $target_file = $target_dir.$new_name;
     $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
     if ($uploadOk == 0) {
-      echo "Sorry, your file was not uploaded.";
+      Yii::$app->getSession()->setFlash('error', "Error while uploading file");
+        return $this->render('index',array('utilities'=>TblUtility::find()->all()));
     } else {
       if (move_uploaded_file($_FILES["bulk_upload"]["tmp_name"], $target_file)) {
         
@@ -328,7 +335,7 @@ class DefaultController extends HController
     $data=Yii::$app->user->identity;
     $connection = Yii::$app->db;
     $all_invoice = $connection
-    ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND b.PAYMENT_STATUS!="" AND INVOICE_ID!=0 GROUP BY INVOICE_ID');
+    ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND b.PAYMENT_STATUS!="" AND INVOICE_ID!=0 GROUP BY INVOICE_ID ORDER BY INVOICE_ID DESC');
     $all_invoice->bindValue(':userid', $data['USER_ID']);
     $all_invoice->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
     $all_invoice->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
@@ -340,7 +347,7 @@ class DefaultController extends HController
     $data=Yii::$app->user->identity;
     $connection = Yii::$app->db;
     $all_unpaid_invoice = $connection
-    ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND b.PAYMENT_STATUS ="" AND INVOICE_ID!=0 GROUP BY INVOICE_ID');
+    ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND b.PAYMENT_STATUS ="" AND INVOICE_ID!=0 GROUP BY INVOICE_ID ORDER BY INVOICE_ID DESC');
     $all_unpaid_invoice->bindValue(':userid', $data['USER_ID']);
     $all_unpaid_invoice->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
     $all_unpaid_invoice->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
@@ -352,7 +359,7 @@ class DefaultController extends HController
     $data=Yii::$app->user->identity;
     $connection = Yii::$app->db;
     $registeration_failed = $connection
-    ->createCommand('Select b.ACCOUNT_NO,b.PROVIDER_ID,p.provider_name,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND (b.PAYMENT_STATUS ="fail" OR b.RESPONSE_NOT_RECIEVED=1)');
+    ->createCommand('Select b.ACCOUNT_NO,b.PROVIDER_ID,p.provider_name,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND (b.PAYMENT_STATUS ="fail" OR b.RESPONSE_NOT_RECIEVED=1) ORDER BY PROVIDER_BILL_DETAILS_ID DESC');
     $registeration_failed->bindValue(':userid', $data['USER_ID']);
     $registeration_failed->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
     $registeration_failed->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
@@ -404,9 +411,9 @@ class DefaultController extends HController
     $data=Yii::$app->user->identity;
     $connection = Yii::$app->db;
     if(Yii::$app->request->post('from_date') && Yii::$app->request->post('to_date')){
-      $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND RESPONSE_NOT_RECIEVED=0 AND PAYMENT_STATUS='' AND DUE_DATE >=:from_date AND DUE_DATE <=:to_date";
+      $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND RESPONSE_NOT_RECIEVED=0 AND PAYMENT_STATUS='' AND DUE_DATE >=:from_date AND DUE_DATE <=:to_date ORDER BY DUE_DATE ASC";
     } else {
-      $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND PAYMENT_STATUS='' AND RESPONSE_NOT_RECIEVED=0";
+      $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND PAYMENT_STATUS='' AND RESPONSE_NOT_RECIEVED=0  ORDER BY DUE_DATE ASC";
     }
     $unpaid = $connection->createCommand($query);
     $unpaid->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
