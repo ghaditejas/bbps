@@ -333,6 +333,8 @@ function loadData(){
 		allInvoice();
 	} else if (active_tab == 'unpaidinvoicelist'){
 		unpaidInvoice();
+	} else {
+		registerationPending();
 	}
 }
 

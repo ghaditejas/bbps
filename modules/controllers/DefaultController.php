@@ -93,7 +93,7 @@ class DefaultController extends HController
   public function actionPaying(){
     $fields = json_decode($this->actionGet_fields(Yii::$app->request->post('providers')),true);
     $error = array(); 
-    $upload_error = array();
+    // $upload_error = array();
     if($_FILES['bulk_upload']['tmp_name']){
       $uploadedFile_data = $this->upload();
       if($uploadedFile_data){
@@ -698,7 +698,7 @@ class DefaultController extends HController
     }
     public function actionGenerate_bill_receipt($bill_details_id) {
       $connection = Yii::$app->db;
-      $query="SELECT b.BANK_REF_PAYMENT_NUMBER,b.ACCOUNT_NO,b.PAYMENT_STATUS,b.AMOUNT,b.FNAME,b.LNAME,b.EMAIL,tr.PAY_MODE from tbl_provider_bill_details as b JOIN tbl_transcation_details as tr on tr.INVOICE_ID = b.INVOICE_ID where b.PROVIDER_BILL_DETAILS_ID=:bill_details_id";
+      $query="SELECT b.BANK_REF_PAYMENT_NUMBER,b.ACCOUNT_NO,b.PAYMENT_STATUS,b.AMOUNT,b.FNAME,b.DUE_DATE,b.LNAME,b.EMAIL,tr.PAY_MODE,tr.CREATED_ON from tbl_provider_bill_details as b JOIN tbl_transcation_details as tr on tr.INVOICE_ID = b.INVOICE_ID where b.PROVIDER_BILL_DETAILS_ID=:bill_details_id";
       $receipt = $connection
       ->createCommand($query);
       $receipt->bindValue(':bill_details_id',$bill_details_id);
