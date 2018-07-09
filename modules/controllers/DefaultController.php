@@ -37,13 +37,13 @@ class DefaultController extends HController
     ->createCommand($query);
     $paid->bindValue(':user_id',$data['USER_ID']);
     $paid_count = $paid->queryAll();
-
+    
     $query1="SELECT count(distinct(`INVOICE_ID`)) as UNPAID FROM `tbl_provider_bill_details` WHERE `PAYMENT_STATUS`= '' AND INVOICE_ID != 0 AND USER_ID=:user_id";
     $unpaid = $connection
     ->createCommand($query1);
     $unpaid->bindValue(':user_id',$data['USER_ID']);
     $unpaid_count = $unpaid->queryAll();
-
+    
     $query2="SELECT count(distinct(b.INVOICE_ID)) as INVOICE,u.utility_name FROM `tbl_provider_bill_details` as b JOIN tbl_utility as u ON b.`UTILITY_ID` = u.utility_id WHERE b.USER_ID=:user_id AND INVOICE_ID != 0 GROUP BY b.UTILITY_ID";
     $total_invoice = $connection
     ->createCommand($query2);
@@ -51,7 +51,7 @@ class DefaultController extends HController
     $total_invoice_utility = $total_invoice->queryAll();
     return $this->render('dashboard',array('paid'=>$paid_count[0]['PAID'],'unpaid'=>$unpaid_count[0]['UNPAID'],'invoices'=>$total_invoice_utility));
   }
-
+  
   public function actionBiller()
   {
     $utilities = TblUtility::find()->all();
@@ -106,33 +106,38 @@ class DefaultController extends HController
         $handle = fopen( Yii::$app->getBasePath()."/modules/resources/upload/".$uploadedFile_data['file_name'], "r");
         fgetcsv($handle);
         if(fgetcsv($handle, 1024, ",")){
-        while (($fileop = fgetcsv($handle, 1024, ",")) !== false) 
-        {
-          
-          if($fileop[0]== "" || $fileop[1]=="" || $fileop[2] == "" || $this->check_dynamic_validation($fileop)){
-            $error = $fileop;
-            $error[] = "Could not Import Details Has Validation Error";
-            $upload_error[] = $error;
-          } else {
-            $i=1;
-            $data['fname']=$fileop[0];
-            $data['lname']=$fileop[1];
-            $data['email']=$fileop[2];
-            $data['account_id']= $fileop[3];
-            for($i=1;$i<sizeof($fields);$i++){
-              $fields_data[$fields[$i]]=$fileop[$i+3];
+          $new_handle = fopen( Yii::$app->getBasePath()."/modules/resources/upload/".$uploadedFile_data['file_name'], "r");
+          fgetcsv($new_handle);
+          while (($fileop = fgetcsv($new_handle, 1024, ",")) !== false) 
+          {
+            if(!preg_match('#^[A-Z]+$#i',$fileop[0]) || !preg_match('#^[A-Z]+$#i',$fileop[1]) || !filter_var($fileop[2], FILTER_VALIDATE_EMAIL) || $this->check_dynamic_validation($fileop)){
+              $error = $fileop;
+              $error[] = "Could not Import Details Has Validation Error";
+              $upload_error[] = $error;
+            }else if($this->check_account_id($fileop[3])){
+              $error = $fileop;
+              $error[] = "Account id already exist";
+              $upload_error[] = $error;
+            } else {
+              $i=1;
+              $data['fname']=$fileop[0];
+              $data['lname']=$fileop[1];
+              $data['email']=$fileop[2];
+              $data['account_id']= $fileop[3];
+              for($i=1;$i<sizeof($fields);$i++){
+                $fields_data[$fields[$i]]=$fileop[$i+3];
+              }
+              $data['details'] = json_encode($fields_data);
+              $data['billerid'] = Yii::$app->request->post('providers');
+              $data['remark'] = Yii::$app->request->post('utility_name');
+              $data['requestid'] = $this->bill_details($uploadedFile_data,$data);
+              $bill_details[]=$data;
             }
-            $data['details'] = json_encode($fields_data);
-            $data['billerid'] = Yii::$app->request->post('providers');
-            $data['remark'] = Yii::$app->request->post('utility_name');
-            $data['requestid'] = $this->bill_details($uploadedFile_data,$data);
-            $bill_details[]=$data;
           }
-        }
-        $template="data_uploaded";
-      } else {
-        Yii::$app->getSession()->setFlash('error', "Empty File Uploaded");
-        return $this->render('index',array('utilities'=>TblUtility::find()->all()));
+          $template="data_uploaded";
+        } else {
+          Yii::$app->getSession()->setFlash('error', "Empty File Uploaded");
+          return $this->render('index',array('utilities'=>TblUtility::find()->all()));
         }
       } else{
         Yii::$app->getSession()->setFlash('error', "Error while uploading file");
@@ -146,6 +151,10 @@ class DefaultController extends HController
       $data=array();
       //$invoice_id = $this->invoice_create();
       $data['account_id']=Yii::$app->request->post(str_replace(' ','_',$fields[0]));
+      if($this->check_account_id($data['account_id'])){
+        Yii::$app->getSession()->setFlash('error', "Account Id already exist");
+        return $this->render('index',array('utilities'=>TblUtility::find()->all()));
+      }
       for($i=1;$i<sizeof($fields);$i++){
         $fields_data[$fields[$i]]=Yii::$app->request->post(str_replace(' ','_',$fields[$i]));
       }
@@ -214,7 +223,7 @@ class DefaultController extends HController
     $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
     if ($uploadOk == 0) {
       Yii::$app->getSession()->setFlash('error', "Error while uploading file");
-        return $this->render('index',array('utilities'=>TblUtility::find()->all()));
+      return $this->render('index',array('utilities'=>TblUtility::find()->all()));
     } else {
       if (move_uploaded_file($_FILES["bulk_upload"]["tmp_name"], $target_file)) {
         
@@ -576,7 +585,7 @@ class DefaultController extends HController
     curl_setopt($curl, CURLOPT_POSTFIELDS,$api_data);
     $curl_response = curl_exec($curl);
     curl_close($curl);
-    print_r($curl_response);
+    // print_r($curl_response);
     // exit;
     return json_decode($curl_response,true);
   }
@@ -647,17 +656,30 @@ class DefaultController extends HController
         $check_utility_data = $check_utility->execute();
         $utility_id = $connection->getLastInsertID();
       }
-      $query2 = "INSERT into tbl_provider (utility_id,provider_name,FIELDS,BILLER_MASTER_ID,VALIDATIONS) SELECT * FROM (SELECT :utility_id,:provider_name,:fields,:biller_master_id,:validations) AS tmp
-      WHERE NOT EXISTS (
-        SELECT provider_name FROM tbl_provider WHERE provider_name = :provider_name
-        )";
-        $provider_update=$connection->createCommand($query2);
-        $provider_update->bindValue(':utility_id',$utility_id);
-        $provider_update->bindValue(':provider_name',$value['BILLER_NAME']);
-        $provider_update->bindValue(':fields',$value['FIELDNAMES']);
-        $provider_update->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
-        $provider_update->bindValue(':validations',$value['VALIDATION']);
-        $provider_update_data = $provider_update->execute();
+      $query3='SELECT provider_id from tbl_provider where BILLER_MASTER_ID = :biller_master_id';
+      $check_provider=$connection->createCommand($query3);
+      $check_provider->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
+      $check_provider_data = $check_provider->execute();
+      if($check_provider_data){
+        $query4 = "UPDATE tbl_provider SET FIELDS=:fields,VALIDATIONS=:validations WHERE BILLER_MASTER_ID=:biller_master_id";
+        $update_provider=$connection->createCommand($query4);
+        $update_provider->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
+        $update_provider->bindValue(':fields',$value['FIELDNAMES']);
+        $update_provider->bindValue(':validations',$value['VALIDATION']);
+        $update_provider_data = $update_provider->execute();
+      }else{  
+        $query2 = "INSERT into tbl_provider (utility_id,provider_name,FIELDS,BILLER_MASTER_ID,VALIDATIONS) SELECT * FROM (SELECT :utility_id,:provider_name,:fields,:biller_master_id,:validations) AS tmp
+        WHERE NOT EXISTS (
+          SELECT provider_name FROM tbl_provider WHERE provider_name = :provider_name
+          )";
+          $provider_update=$connection->createCommand($query2);
+          $provider_update->bindValue(':utility_id',$utility_id);
+          $provider_update->bindValue(':provider_name',$value['BILLER_NAME']);
+          $provider_update->bindValue(':fields',$value['FIELDNAMES']);
+          $provider_update->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
+          $provider_update->bindValue(':validations',$value['VALIDATION']);
+          $provider_update_data = $provider_update->execute();
+        }
         // print_r($provider_update_data);
       }
     }
@@ -673,11 +695,11 @@ class DefaultController extends HController
         $i++;
       }
       if($errors==""){
-        $name = md5(uniqid() . microtime(TRUE) . mt_rand()). 'SampleFormat.csv';
+        $name = 'SampleFormat.csv';
         $field[]=$fields;
       } else {
         $upload_error = json_decode($errors,true);
-        $name = md5(uniqid() . microtime(TRUE) . mt_rand()). 'ERRORS.csv';
+        $name = 'ERRORS.csv';
         $field = array();
         $field[]=$fields;
         foreach($upload_error as $key=>$value){
@@ -742,7 +764,7 @@ class DefaultController extends HController
           echo json_encode($invoice_recieved_data);
           exit;
         }
-
+        
         public function actionPayment_amount_check(){
           $connection = Yii::$app->db;
           $invoice = $connection
@@ -760,6 +782,19 @@ class DefaultController extends HController
           $payment_data['charges']=$get_charges_data[0]['CHARGES'];
           echo json_encode($payment_data);
           exit;
+        }
+
+        public function check_account_id($account_no){
+          $connection = Yii::$app->db;
+          $check_account_id = $connection
+          ->createCommand("Select ACCOUNT_NO from tbl_provider_bill_details where ACCOUNT_NO=:account_no AND REMOVED='n'");
+          $check_account_id->bindValue(':account_no', $account_no);
+          $check_account_id_data = $check_account_id->queryAll();
+          if(sizeof($check_account_id_data)){
+            return true;
+          }else{
+            return false;
+          }
         }
       }
       

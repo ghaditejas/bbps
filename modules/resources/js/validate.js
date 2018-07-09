@@ -1,7 +1,7 @@
 $.validator.addMethod('filesize', function () {
     console.log($('input[name="bulk_upload"]').val());
     if($('input[name="bulk_upload"]').val()!=""){
-        return ($('input[name="bulk_upload"]')[0].files[0].size<= 1000)
+        return ($('input[name="bulk_upload"]')[0].files[0].size<= 10000)
     } else {
         return true;
     }

@@ -1,0 +1,15 @@
+ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Data upload error."}
+ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Account already register.[\"6784513465\",\"6784513466\"]"}
+ADD BILLER API RESPONSE : {"STATUS":"200","MSG":"Data uploaded successfully"}
+ADD BILLER API RESPONSE : {"STATUS":"200","MSG":"Data uploaded successfully"}
+ADD BILLER API RESPONSE : {"STATUS":"200","MSG":"Data uploaded successfully"}
+ADD BILLER API RESPONSE : {"STATUS":"200","MSG":"Data uploaded successfully"}
+ADD BILLER API RESPONSE : {"STATUS":"200","MSG":"Data uploaded successfully"}
+ADD BILLER API RESPONSE : null
+ADD BILLER API RESPONSE : null
+ADD BILLER API RESPONSE : null
+ADD BILLER API RESPONSE : null
+ADD BILLER API RESPONSE : null
+ADD BILLER API RESPONSE : {"STATUS":"400","MSG":"Data upload error."}
+ADD BILLER API RESPONSE : {"STATUS":"200","MSG":"Data uploaded successfully"}
+ADD BILLER API RESPONSE : {"STATUS":"200","MSG":"Data uploaded successfully"}

@@ -91,19 +91,19 @@
                             <div class="row" id="single">
                                 <div class="col-sm-12 col-md-8">                            
                                     <div class="form-group">
-                                        <input type="text" class="form-control" id="fname" name="fname" placeholder="Enter your First Name">
+                                        <input type="text" class="form-control single" id="fname" name="fname" placeholder="Enter your First Name">
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
                                 <div class="col-sm-12 col-md-8">                            
                                     <div class="form-group">
-                                        <input type="text" class="form-control" id="lname" name="lname" placeholder="Enter your Last Name">
+                                        <input type="text" class="form-control single" id="lname" name="lname" placeholder="Enter your Last Name">
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
                                 <div class="col-sm-12 col-md-8">                            
                                     <div class="form-group">
-                                        <input type="text" class="form-control" id="email" name="email" placeholder="Enter your Email">
+                                        <input type="text" class="form-control single" id="email" name="email" placeholder="Enter your Email">
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
@@ -173,8 +173,7 @@ function getFields(){
       success: function(data) {
             $('.dynamic').remove();
            $.each(data, function (key, value) {
-               console.log(value.validation);
-                    var fields='<div class="col-sm-12 col-md-8 dynamic"><div class="form-group"><input type="text" name="'+value.field+'" class="dynamic_field form-control" placeholder="Enter your '+value.field+'" value=""><span class="error"></span></div></div>';
+                    var fields='<div class="col-sm-12 col-md-8 dynamic"><div class="form-group"><input type="text" name="'+value.field+'" class="dynamic_field form-control single" placeholder="Enter your '+value.field+'" value=""><span class="error"></span></div></div>';
                     $('#single').append(fields);
                  $('input[name="'+value.field+'"]').rules("add", { 
                     required:function(element){
@@ -188,8 +187,47 @@ function getFields(){
                 });
             });
              $('#download_csv').empty().append("<a href='/partnerpay/web/bbps/default/download_csv_file?provider="+provider+"' target='_blank' >Download Sample Format</a>")
+             $('#bulk_upload').val('');
+             $('#bulk_upload').removeAttr('disabled');
+             $('.file-input-name').html('');
+             $('.single').each(function(){
+                 $(this).removeAttr('disabled');
+                 $(this).val('');
+            })
       }
    });
    }
 }
+
+$(document).on('change','#bulk_upload',function(){
+    if($('#bulk_upload').val()!=""){
+        $('.single').attr('disabled','true');
+    }else{
+        $('.single').removeAttr('disabled');
+    }
+});
+
+$(document).on('change','.single',function(){
+    $('.single').each(function(){
+        console.log($(this).val());
+        if($(this).val()!=''){
+            $('#bulk_upload').attr('disabled','true');  
+            return false;
+        }else{
+            $('#bulk_upload').removeAttr('disabled'); 
+        }
+    })
+})
+
+$(document).on('change','.single',function(){
+    $('.single').each(function(){
+        console.log($(this).val());
+        if($(this).val()!=''){
+            $('#bulk_upload').attr('disabled','true');  
+            return false;
+        }else{
+            $('#bulk_upload').removeAttr('disabled'); 
+        }
+    })
+})
 </script>

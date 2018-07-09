@@ -163,7 +163,7 @@
 							</div>
 						</td>
 					</tr>
-                <?php } ?>
+                <?php $i++;} ?>
 			</tbody>
 			</table>
 			</div>
@@ -289,11 +289,16 @@ function applyCharge(){
 	var charges  = <?php echo $charges['CHARGES']; ?>;  
 	var charge_mode =  $('#payment_mode').val();
 	taxRate = 0.18;
+	if(charge_mode){
 	calculatedAmount = (charges[charge_mode] * amount) / 100;
     b_chgs = calculatedAmount * taxRate;
     tot_amt = parseFloat(amount) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
 	$('#total_amount').val(parseFloat(tot_amt).toFixed(2));
 	$('#invoice_amount').val(parseFloat(tot_amt).toFixed(2));
+	} else {
+		$('#total_amount').val(amount);
+		$('#invoice_amount').val(amount);
+	}
 }
 
  function remove_mobile(mobile_no,invoice_id){
