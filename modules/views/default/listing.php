@@ -74,7 +74,7 @@
 		
 		
 			<div class="removed-table hidden" id="removed">	
-				<div class="tablebox">	
+				<div class="tablebox non-tbbd">	
 					<div class="table-responsive">
 					<!-- <input type="button" class="btn btn-primary" value="Pay Selected" style=""> -->
 			<table class="table table-striped table-bordered text-center" id="removed_data">
@@ -115,7 +115,7 @@
 		</div><!-- .tab-content close -->
 
 		<div role="tabpanel" class="tab-pane" id="unpaidinvoice">
-			<div class="tablebox">	
+			<div class="tablebox non-tbbd">	
 			<div class="table-responsive">
 			<table id="unpaid_invoice" class="table table-striped table-bordered text-center">
 			<thead>
@@ -153,7 +153,7 @@
 		</div>
 	
 		<div role="tabpanel" class="tab-pane" id="alllist">
-			<div class="tablebox">	
+			<div class="tablebox non-tbbd">	
 			<div class="table-responsive">
 			<table id="all_invoice" class="table table-striped table-bordered text-center">
 			<thead>
@@ -193,7 +193,7 @@
 		<!-- .tab-content close -->	
 
 	    <div role="tabpanel" class="tab-pane" id="registration_failed">
-			<div class="tablebox">	
+			<div class="tablebox non-tbbd">	
 			<div class="table-responsive">
 			<table id="failed_pending" class="table table-striped table-bordered text-center">
 			<thead>
@@ -239,7 +239,6 @@
                     <h4 class="modal-title" id="myModalLabel">Invoice listing</h4>
                 </div>
                 <div class="modal-body">
-				   <span style="color:red;">The failed transaction amount has been refunded to your account</span>
                     <div class="tableboxpopup">
                         <div class="table-responsive">
                             <table class="table table-striped table-bordered text-center" id="paid_invoice">
@@ -267,6 +266,7 @@
                                 </tbody>
                             </table>
 						</div>
+						<span style="color:#144913; font-size: 13px; ">* The failed transaction amount has been refunded to your account</span>
                     </div>
                 </div>
             </div>

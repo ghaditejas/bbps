@@ -525,6 +525,17 @@ table.dataTable {
     max-height: 400px;
     overflow: auto;
 }
+.table-responsive{position: relative;}
+.table-responsive:before{ content:'';position: absolute; top:0; left:0; z-index:2; display:block; width:20px; height:20px; border-top:1px solid #dddddd;border-left:1px solid #dddddd;
+    -webkit-border-top-left-radius:8px;border-top-left-radius:8px;-moz-border-radius-topleft:8px;}
+    .table-responsive:after{ content:'';position:absolute; top:0; right:0;z-index:2; display:block; width:20px; height:20px; border-top:1px solid #dddddd;border-right:1px solid #dddddd;
+    -webkit-border-top-right-radius:8px;border-top-right-radius:8px;-moz-border-radius-topright:8px;}
+.non-tbbd .table-responsive:before{
+    display: none;
+}
+.non-tbbd .table-responsive:after{
+    display: none;
+}
 @media(min-width:768px) {
 	.navbar-nav > li > .dropdown-menu:before{ content:''; display:block;/*width:13px;*/height:7px; margin-top:-7px; margin-right:-96px; background:url("../images/dropdown-menu.png") bottom center no-repeat; }
 	.download-wrap {

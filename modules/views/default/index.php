@@ -24,10 +24,10 @@
                 <div class="wallet">
                     <div class="row">
                         <div class="col-sm-8">
-                            Wallet balance: <span class="amount-tx">Rs. 12000.00</span>
+                            Wallet balance: <span class="amount-tx" id="wallet_amount">Rs. <?php echo $wallet_balance;?></span>
                         </div>
                         <div class="col-sm-4">
-                            <a class="btn btn-success" href="javascript:void(0)">Add Topup</a>
+                            <a class="btn btn-success" href="javascript:walletTopUp()">Add Topup</a>
                         </div>
                     </div>           
                 </div>          
@@ -61,7 +61,7 @@
                         </div>
                         <div class="col-md-8 opclist-box">
                             <h4>Mobile Bill Payment</h4>
-                            <div class="row">                           
+                            <!-- <div class="row">                           
                                 <div class="col-sm-12 col-md-8 usertx">
                                     <label>Register this user</label>
                                     <div class="yesnoswitch">
@@ -72,7 +72,7 @@
                                     </label>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                             <div><input type="hidden" id="utility_name" name="utility_name" value=""></div>
                             <div class="row" id="bulk">
                                 <div class="col-sm-12 col-md-8">
@@ -230,4 +230,18 @@ $(document).on('change','.single',function(){
         }
     })
 })
+
+function walletTopUp(){
+    $.ajax({
+      url: "/partnerpay/web/bbps/default/wallet_top_up",  
+      dataType: "json",
+      success: function(data) {
+          if(data.TRANSACTIONSTATUS == 200){
+              $('#wallet_amount').empty().html('Rs. '+data.WALLETBALANCE);
+          } else {
+              alert ("Error in Top Up Process please try again later")
+          }
+      }
+   });
+}
 </script>

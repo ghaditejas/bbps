@@ -51,25 +51,25 @@
 						<td align="center" valign="top">
 							<table width="800" border="0" cellspacing="0" cellpadding="10" style="border-collapse: collapse;font-family:Verdana, Geneva, sans-serif; font-size:14px; color:#333;">
 								<tr align="left" style="background-color: #eeeeee; border:2px solid #e5e5e5">
-									<td align="left" valign="top" width="100%">Airtel Mobile Mumbai</td>
+									<td align="left" valign="top" width="100%"><?php echo $receipt['provider_name'];; ?></td>
 								</tr>
 							</table>
 							<table width="800" border="0" cellspacing="0" cellpadding="10" style="border-collapse: collapse;font-family:Verdana, Geneva, sans-serif; font-size:14px; color:#333;">
 								<tr>
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Status</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Success</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $receipt['PAYMENT_STATUS'];?></td>
 								</tr>
 								<tr style="background-color: #ececec">
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Name of the Customer</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Test DaTa</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $receipt['FNAME']." ".$receipt['LNAME'];?></td>
 								</tr>
 								<tr>
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Consumer Number</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">9768833361</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $receipt['ACCOUNT_NO'];?></td>
 								</tr>
 								<tr style="background-color: #ececec">
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Mobile Number</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">9768833361</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $receipt['ACCOUNT_NO'];?></td>
 								</tr>
 								<tr>
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Payment Mode</td>
@@ -81,27 +81,27 @@
 								</tr>
 								<tr>
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Bill Date</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">2018-07-07</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo date('d-m-Y',strtotime($receipt['DUE_DATE']));?></td>
 								</tr>
 								<tr style="background-color: #ececec">
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Transaction Id</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">215715</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $receipt['AIRPAY_ID'];?></td>
 								</tr>
 								<tr>
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Bill Amount</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">208.00</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $receipt['AMOUNT'];?></td>
 								</tr>
 								<tr style="background-color: #ececec">
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Customer Convenience Fee</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">0.00</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $charge;?></td>
 								</tr>
 								<tr>
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Total Amount</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">208.00</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $charge+$receipt['AMOUNT'];?></td>
 								</tr>
 								<tr style="background-color: #ececec">
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Transaction Date and Time</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">2018-06-26</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo date('d-m-Y',strtotime($receipt['CREATED_ON']));?></td>
 								</tr>
 							</table>
 						</td>

@@ -54,8 +54,9 @@ class DefaultController extends HController
   
   public function actionBiller()
   {
+    $wallet_data_response = $this->get_wallet_balance();
     $utilities = TblUtility::find()->all();
-    return $this->render('index',array('utilities'=>$utilities));
+    return $this->render('index',array('utilities'=>$utilities,'wallet_balance'=>$wallet_data_response['TRANSACTION']['WALLETBALANCE']));
   }
   
   public function writeLog($mid, $data) {
@@ -137,11 +138,13 @@ class DefaultController extends HController
           $template="data_uploaded";
         } else {
           Yii::$app->getSession()->setFlash('error', "Empty File Uploaded");
-          return $this->render('index',array('utilities'=>TblUtility::find()->all()));
+          $wallet_data_response = $this->get_wallet_balance();
+          return $this->render('index',array('utilities'=>TblUtility::find()->all(),'wallet_balance'=>$wallet_data_response['TRANSACTION']['WALLETBALANCE']));
         }
       } else{
         Yii::$app->getSession()->setFlash('error', "Error while uploading file");
-        return $this->render('index',array('utilities'=>TblUtility::find()->all()));
+        $wallet_data_response = $this->get_wallet_balance();
+        return $this->render('index',array('utilities'=>TblUtility::find()->all(),'wallet_balance'=>$wallet_data_response['TRANSACTION']['WALLETBALANCE']));
       }
     } else {
       if(Yii::$app->request->post('register')){
@@ -162,7 +165,7 @@ class DefaultController extends HController
       $data['lname']=Yii::$app->request->post('lname');
       $data['email']=Yii::$app->request->post('email');
       $data['details'] = json_encode($fields_data);
-      $data['billerid'] = 1;
+      $data['billerid'] = Yii::$app->request->post('providers');
       $data['remark'] = Yii::$app->request->post('utility_name');
       $data['requestid'] = $this->bill_details(0,$data);
       $bill_details[]=$data;
@@ -290,7 +293,7 @@ class DefaultController extends HController
   
   public function bill_details($uploadedFile_data,$data){
     $model= new TblProviderBillDetails();
-    if(Yii::$app->request->post('register')){
+    // if(Yii::$app->request->post('register')){
       $model->IS_REGISTER='y';
       $connection = Yii::$app->db;
       $query="SELECT REF_NO from tbl_registered_account where ACCOUNT_NO=:account_no AND PROVIDE_ID=:provider_id AND UTILITY_ID=:utility_id AND IS_REGISTERED=1";
@@ -309,9 +312,9 @@ class DefaultController extends HController
         $insert_registered->bindValue(':utility_id',Yii::$app->request->post('utility_name'));
         $insert_registered_data = $insert_registered->execute();
       }
-    } else {
-      $model->IS_REGISTER='n';
-    }
+    // } else {
+    //   $model->IS_REGISTER='y';
+    // }
     $model->PROVIDER_ID=Yii::$app->request->post('providers');
     $model->UTILITY_ID=Yii::$app->request->post('utility_name');
     if($uploadedFile_data['inserted_id']){
@@ -576,16 +579,25 @@ class DefaultController extends HController
     }
   } 
   
-  public function api_call($url,$api_data){
+  public function api_call($url,$api_data,$wallet=""){
     $curl = curl_init($url);
     curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
-    //curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+    $user_agent = $_SERVER['HTTP_USER_AGENT'];
+    $headers=array();
+    $headers[] = 'User-Agent: '. $user_agent;
+    if($wallet){
+      $headers[] = 'Content-Type: multipart/form-data';
+    } else {
+      $headers[] = 'Content-Type: application/json';
+    }
+    $headers[] = 'Cache-Control: no-cache';
+    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($curl, CURLOPT_POST, 1);
     curl_setopt($curl, CURLOPT_POSTFIELDS,$api_data);
     $curl_response = curl_exec($curl);
     curl_close($curl);
-    // print_r($curl_response);
+    // print_r(json_decode($curl_response,true));
     // exit;
     return json_decode($curl_response,true);
   }
@@ -720,7 +732,7 @@ class DefaultController extends HController
     }
     public function actionGenerate_bill_receipt($bill_details_id) {
       $connection = Yii::$app->db;
-      $query="SELECT b.BANK_REF_PAYMENT_NUMBER,b.ACCOUNT_NO,b.PAYMENT_STATUS,b.AMOUNT,b.FNAME,b.DUE_DATE,b.LNAME,b.EMAIL,tr.PAY_MODE,tr.CREATED_ON from tbl_provider_bill_details as b JOIN tbl_transcation_details as tr on tr.INVOICE_ID = b.INVOICE_ID where b.PROVIDER_BILL_DETAILS_ID=:bill_details_id";
+      $query="SELECT b.BANK_REF_PAYMENT_NUMBER,b.ACCOUNT_NO,b.PAYMENT_STATUS,b.AMOUNT,b.FNAME,b.DUE_DATE,b.LNAME,b.EMAIL,tr.PAY_MODE,tr.CREATED_ON,tr.AIRPAY_ID,p.provider_name from tbl_provider_bill_details as b JOIN tbl_transcation_details as tr on tr.INVOICE_ID = b.INVOICE_ID  JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.PROVIDER_BILL_DETAILS_ID=:bill_details_id";
       $receipt = $connection
       ->createCommand($query);
       $receipt->bindValue(':bill_details_id',$bill_details_id);
@@ -736,7 +748,7 @@ class DefaultController extends HController
       $b_chgs = $calculatedAmount * $taxRate;
       $total_charge = $calculatedAmount+$b_chgs;
       
-      $content = $this->renderPartial('receipt-bbps',array('receipt'=>$receipt_data[0],'charge'=>$total_charge));
+      $content = $this->renderPartial('receipt-bbps',array('receipt'=>$receipt_data[0],'charge'=>round($total_charge,2)));
       $pdf = new Pdf([
         'mode' => Pdf::MODE_CORE, 
         'format' => Pdf::FORMAT_A4, 
@@ -745,9 +757,9 @@ class DefaultController extends HController
         'content' => $content,  
         'cssFile' => '@vendor/kartik-v/yii2-mpdf/assets/kv-mpdf-bootstrap.min.css',
         'cssInline' => '.kv-heading-1{font-size:18px}', 
-        'options' => ['title' => 'Krajee Report Title'],
+        'options' => ['title' => 'BBPS RECEIPT'],
         'methods' => [ 
-          'SetHeader'=>['Krajee Report Header'], 
+          'SetHeader'=>['BBPS RECEIPT'], 
           'SetFooter'=>['{PAGENO}'],
           ]
           ]);
@@ -768,7 +780,7 @@ class DefaultController extends HController
         public function actionPayment_amount_check(){
           $connection = Yii::$app->db;
           $invoice = $connection
-          ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
+          ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
           $invoice->bindValue(':invoice_id', Yii::$app->request->post('invoice_id'));
           $invoice_data = $invoice->queryAll();
           $sum = $this->calculate_sum($invoice_data);
@@ -783,7 +795,7 @@ class DefaultController extends HController
           echo json_encode($payment_data);
           exit;
         }
-
+        
         public function check_account_id($account_no){
           $connection = Yii::$app->db;
           $check_account_id = $connection
@@ -795,6 +807,55 @@ class DefaultController extends HController
           }else{
             return false;
           }
+        }
+        
+        public function actionWallet_top_up(){
+          $data=Yii::$app->user->identity;
+          $connection = Yii::$app->db;
+          $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+          $config = $connection
+          ->createCommand($query);
+          $config->bindValue(':partner_id',$data['PARTNER_ID']);
+          $config_data = $config->queryAll();
+          $chk = new Checksum();
+          $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+          $api_data=[
+            "txnmode"=>"credit",
+            "mercid"=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+            "token"=>$data['WALLET_TOKEN'],
+            "walletUser"=>$data['EMAIL'],
+            "orderid"=>"255",
+            "amount"=>"30",
+            "mer_dom"=>base64_encode("http://localhost"),
+            "outputFormat"=>"json",
+            "checksum"=>md5($config_data[0]['AIRPAY_MERCHANT_ID'].$data['WALLET_TOKEN'].$data['EMAIL']."credit25530".date('Y-m-d').$privatekey),
+            "privatekey"=>$privatekey,
+          ];
+          $url="https://devel-payments.airpayme.com/wallet/api/walletTxn.php";
+          $wallet_top_up_response = $this->api_call($url,$api_data,1);
+          echo (json_encode($wallet_top_up_response['TRANSACTION']));
+          exit;
+        }
+
+        public function get_wallet_balance(){
+          $data=Yii::$app->user->identity;
+          $connection = Yii::$app->db;
+          $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+          $config = $connection
+          ->createCommand($query);
+          $config->bindValue(':partner_id',$data['PARTNER_ID']);
+          $config_data = $config->queryAll();
+          $chk = new Checksum();
+          $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+          $wallet_data["mercid"]=$config_data[0]['AIRPAY_MERCHANT_ID'];
+          $wallet_data["walletUser"]=$data['EMAIL'];
+          $wallet_data["token"]=$data['WALLET_TOKEN'];
+          $wallet_data["outputFormat"]="json";
+          $wallet_data["privatekey"] = $privatekey;
+          $wallet_data["checksum"]=md5($wallet_data["mercid"].$wallet_data["token"].$wallet_data["walletUser"].date('Y-m-d').$wallet_data["privatekey"]);
+          $url="https://devel-payments.airpayme.com/wallet/api/walletBalance.php";
+          $wallet_data_response = $this->api_call($url,$wallet_data,1);
+          return $wallet_data_response; 
         }
       }
       

@@ -137,14 +137,14 @@
       <div class="modal-body">
 		<div class="tableboxpopup">	
 			<div class="table-responsive">
-			<table class="table table-striped table-bordered text-center">
+			<table class="table table-striped table-bordered text-center" id="account_no_bill">
 			<thead>
 			<tr>
 				<th class="text-center idnum">#</th>
 				<th class="text-center">Account No.</th>
 				<th class="text-center">Due Date</th>
 				<th class="text-center">Amount</th>
-				<th class="text-center action">&nbsp;</th>
+				<th class="text-center action">Action</th>
 			</tr>
 			</thead>
 			
@@ -153,13 +153,15 @@
                     $i=1;
                 foreach($invoice_data as $invoice_value) {?>
 					<tr id="<?=$invoice_value['ACCOUNT_NO'];?>">
-						<td class="idnum"><?=$i;?></td>
+						<td class="idnum" id="<?=$i;?>"><?=$i;?></td>
 						<td><?=$invoice_value['ACCOUNT_NO'];?></td>
 						<td><?=date("d-m-Y",strtotime($invoice_value['DUE_DATE']));?></td>
-						<td class="text-right"><?=$invoice_value['AMOUNT'];?></td>
+						<td class="text-center"><?=$invoice_value['AMOUNT'];?></td>
 						<td class="action">
 							<div class="bbox">
+						<?php if(sizeof($invoice_data)!=1){?>
 								<a onClick="remove_mobile('<?=$invoice_value['ACCOUNT_NO'];?>','<?=$invoice_value['INVOICE_ID'];?>')"><span class="glyphicon glyphicon-trash"></span></a>
+						<?php } ?>
 							</div>
 						</td>
 					</tr>
@@ -310,9 +312,6 @@ function applyCharge(){
 					dataType:"json",
       				success: function(data) {
                             if(data){
-								if(data.sum==0){
-									window.location.href = '/partnerpay/web/bbps/default/listing';
-								}
 								var charges  = <?php echo $charges['CHARGES']; ?>;
 									var charge_mode =  $('#payment_mode').val();	  
 								if(charge_mode){
@@ -326,7 +325,16 @@ function applyCharge(){
 								$('#invoice_amount').val(parseFloat(tot_amt).toFixed(2));
 								$('#total_amount').val(parseFloat(tot_amt).toFixed(2))
 								$('#bill_amount').val(data.sum);
+								var count = $('#'+mobile_no).find('.idnum').attr('id');
                                 $('#'+mobile_no).remove();
+								for(var i=parseInt(count)+1;i<=$('#account_no_bill tbody tr').length+1;i++){
+									$('#'+i).empty().html(i-1);
+									$('#'+i).attr('id',i-1);									
+								}
+								if($('#account_no_bill tbody tr').length == 1){
+										$(".bbox").empty();
+								}
+
                             }
 	  					}
             		 });

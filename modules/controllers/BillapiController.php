@@ -17,10 +17,10 @@ use app\modules\models\TblTranscationDetails;
 class BillapiController extends Hcontroller
 {
   public $enableCsrfValidation = false;
-  public function actionIndex()
-  {
-    return $this->render('index');
-  }
+  // public function actionIndex()
+  // {
+  //   return $this->render('index');
+  // }
   
   public function writeLog($mid, $data) {
     $filepath = realpath(Yii::$app->basePath)."/modules/resources/log/";
@@ -131,14 +131,15 @@ class BillapiController extends Hcontroller
       } else {
         $status = "pending";
       }
+      $authenticator = explode('!',$data2->AUTHENTICATOR);
       $connection = Yii::$app->db;  
       $update_status = $connection->createCommand()
-      ->update('tbl_provider_bill_details', ['PAYMENT_STATUS'=>$status,'BANK_REF_PAYMENT_NUMBER'=>$data2->BANKREFNUMBER], 'ACCOUNT_NO='.$data2->AUTHENTICATOR.' AND BILL_ID='.$data2->VIEW_BILL_RSP_ID)
+      ->update('tbl_provider_bill_details', ['PAYMENT_STATUS'=>$status,'BANK_REF_PAYMENT_NUMBER'=>$data2->BANKREFNUMBER], 'ACCOUNT_NO='.$authenticator[0].' AND BILL_ID='.$data2->VIEW_BILL_RSP_ID)
       ->execute();
       if($data2->STATUS == 'N'){
         $query2 = "INSERT into tbl_provider_bill_details (PROVIDER_BILL_UPLOAD_DETAILS_ID,PROVIDER_ID,REF_NO,REGISTER_BILLER_FLAG,REMOVED,IS_REGISTER,AMOUNT,UTILITY_ID,USER_ID,RESPONSE_NOT_RECIEVED,ACCOUNT_NO,DETAILS,BANK_BILL_ID,BILL_NUMBER,BILL_ID,DUE_DATE,FNAME,LNAME,EMAIL)  SELECT PROVIDER_BILL_UPLOAD_DETAILS_ID,PROVIDER_ID,REF_NO,REGISTER_BILLER_FLAG,REMOVED,IS_REGISTER,AMOUNT,UTILITY_ID,USER_ID,RESPONSE_NOT_RECIEVED,ACCOUNT_NO,DETAILS,BANK_BILL_ID,BILL_NUMBER,BILL_ID,DUE_DATE,FNAME,LNAME,EMAIL FROM tbl_provider_bill_details WHERE ACCOUNT_NO=:account_no AND BILL_ID =:bill_id";
         $insert_fail_account =  $connection->createCommand($query2);
-        $insert_fail_account->bindValue(':account_no',$data2->AUTHENTICATOR);
+        $insert_fail_account->bindValue(':account_no',$authenticator[0]);
         $insert_fail_account->bindValue(':bill_id',$data2->VIEW_BILL_RSP_ID);
         $insert_fail_account_data = $insert_fail_account->execute();
       }
