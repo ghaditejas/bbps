@@ -108,6 +108,7 @@
 			</div>
 
 			<div class="col-sm-6 btngroup">
+				<button type="button" id="top_up" onClick="walletTopUp()" class="btn btn-primary hidden">Top up</button>
 				<button type="submit" id="pay" class="btn btn-primary">Pay</button>
 				<a href="/partnerpay/web/bbps/default/listing"><button type="button" class="btn btn-primary">Cancel</button></a>
 			</div>
@@ -291,12 +292,17 @@ function applyCharge(){
 	var charges  = <?php echo $charges['CHARGES']; ?>;  
 	var charge_mode =  $('#payment_mode').val();
 	taxRate = 0.18;
+	var wallet = "<?php echo $wallet_balance;?>";
 	if(charge_mode){
-	calculatedAmount = (charges[charge_mode] * amount) / 100;
-    b_chgs = calculatedAmount * taxRate;
-    tot_amt = parseFloat(amount) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
-	$('#total_amount').val(parseFloat(tot_amt).toFixed(2));
-	$('#invoice_amount').val(parseFloat(tot_amt).toFixed(2));
+		calculatedAmount = (charges[charge_mode] * amount) / 100;
+    	b_chgs = calculatedAmount * taxRate;
+    	tot_amt = parseFloat(amount) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
+		$('#total_amount').val(parseFloat(tot_amt).toFixed(2));
+		$('#invoice_amount').val(parseFloat(tot_amt).toFixed(2));
+		if(charge_mode == "ppc" && tot_amt>wallet){
+			$('#pay').addClass('hidden');
+			$('#top_up').removeClass('hidden');
+		}
 	} else {
 		$('#total_amount').val(amount);
 		$('#invoice_amount').val(amount);
@@ -339,4 +345,22 @@ function applyCharge(){
 	  					}
             		 });
  }
+ function walletTopUp(){
+		$.ajax({
+      url: "/partnerpay/web/bbps/default/wallet_top_up",  
+      dataType: "json",
+      success: function(data) {
+          if(data.TRANSACTIONSTATUS == 200){
+			  if($('#total_amount').val()<=data.WALLETBALANCE){
+				$('#pay').removeClass('hidden');
+				$('#top_up').addClass('hidden');
+			  }else{
+				alert ("Wallet is still less than wallet balance") ;
+			  }
+          } else {
+              alert ("Error in Top Up Process please try again later")
+          }
+      }
+   });
+	}
 </script>

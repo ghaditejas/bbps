@@ -391,7 +391,8 @@ class DefaultController extends HController
     ->createCommand("Select CHARGES,MODES from tbl_charges where USER_ID=:user_id");
     $get_charges->bindValue(':user_id', $data['USER_ID']);
     $get_charges_data = $get_charges->queryAll();
-    return $this->render('payment',array('invoice_amount'=>$sum,'invoice_data'=>$invoice_data,'provider'=>$invoice_data[0]['provider_name'],'charges'=>$get_charges_data[0]));
+    $wallet = $this->get_wallet_balance();
+    return $this->render('payment',array('invoice_amount'=>$sum,'invoice_data'=>$invoice_data,'provider'=>$invoice_data[0]['provider_name'],'charges'=>$get_charges_data[0],'wallet_balance'=>$wallet['TRANSACTION']['WALLETBALANCE']));
   }
   
   public function calculate_sum($data){
@@ -458,7 +459,7 @@ class DefaultController extends HController
     $alldata   = $buyerEmail.$buyerFirstName.$buyerLastName.$amount.$orderid;
     $checksum = $chk->calculateChecksum($alldata.date('Y-m-d'),$privatekey);
     
-    return $this->render('airpay_payment',array('payment_data'=>Yii::$app->request->post(),"key"=>$privatekey,"checksum"=>$checksum,"mechant_id"=>$config_data[0]['AIRPAY_MERCHANT_ID']));
+    return $this->render('airpay_payment',array('payment_data'=>Yii::$app->request->post(),"key"=>$privatekey,"checksum"=>$checksum,"mechant_id"=>$config_data[0]['AIRPAY_MERCHANT_ID'],"token"=>$data['WALLET_TOKEN']));
   }
   
   public function actionPaymentresponse(){
@@ -747,7 +748,6 @@ class DefaultController extends HController
       $calculatedAmount = ($charge[$receipt_data[0]['PAY_MODE']] * $receipt_data[0]['AMOUNT']) / 100;
       $b_chgs = $calculatedAmount * $taxRate;
       $total_charge = $calculatedAmount+$b_chgs;
-      
       $content = $this->renderPartial('receipt-bbps',array('receipt'=>$receipt_data[0],'charge'=>round($total_charge,2)));
       $pdf = new Pdf([
         'mode' => Pdf::MODE_CORE, 
@@ -825,10 +825,10 @@ class DefaultController extends HController
             "token"=>$data['WALLET_TOKEN'],
             "walletUser"=>$data['EMAIL'],
             "orderid"=>"255",
-            "amount"=>"30",
+            "amount"=>"100",
             "mer_dom"=>base64_encode("http://localhost"),
             "outputFormat"=>"json",
-            "checksum"=>md5($config_data[0]['AIRPAY_MERCHANT_ID'].$data['WALLET_TOKEN'].$data['EMAIL']."credit25530".date('Y-m-d').$privatekey),
+            "checksum"=>md5($config_data[0]['AIRPAY_MERCHANT_ID'].$data['WALLET_TOKEN'].$data['EMAIL']."credit255100".date('Y-m-d').$privatekey),
             "privatekey"=>$privatekey,
           ];
           $url="https://devel-payments.airpayme.com/wallet/api/walletTxn.php";
@@ -856,6 +856,32 @@ class DefaultController extends HController
           $url="https://devel-payments.airpayme.com/wallet/api/walletBalance.php";
           $wallet_data_response = $this->api_call($url,$wallet_data,1);
           return $wallet_data_response; 
+        }
+      
+      public function actionView_wallet_history(){
+        $data=Yii::$app->user->identity;
+        $connection = Yii::$app->db;
+        $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+        $config = $connection
+        ->createCommand($query);
+        $config->bindValue(':partner_id',$data['PARTNER_ID']);
+        $config_data = $config->queryAll();
+        $chk = new Checksum();
+        $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+        $api_data =  [
+            "mercid"=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+            "token"=>$data['WALLET_TOKEN'],
+            "privatekey"=>$privatekey,
+            "walletUser"=>$data['EMAIL'],
+            "displayorder"=>'desc',
+            "displayrec"=>"10000",
+            "displaypage"=>"",
+            "outputFormat"=>"json",
+            "checksum"=>md5($config_data[0]['AIRPAY_MERCHANT_ID'].$data['WALLET_TOKEN'].$data['EMAIL']."desc10000".date('Y-m-d').$privatekey),
+          ];
+        $url="https://devel-payments.airpayme.com/wallet/api/walletHistory.php";
+        $wallet_data_response = $this->api_call($url,$api_data,1);
+        return $this->render('wallet_history_listing',array('wallet_history'=>$wallet_data_response['TRANSACTION']['WALLETTXNS']['WALLETTXN']));    
         }
       }
       

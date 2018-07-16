@@ -26,6 +26,10 @@
 		            <input type="hidden" name="isocurrency" value="INR">
                     <input type="hidden" name="checksum" value="<?php echo $checksum; ?>">
 				    <input type="hidden" name="chmod" value= "<?php echo $payment_data['payment_mode'] ?>">	
+                    <?php if($payment_data['payment_mode'] == "ppc") {?>
+                        <input type="hidden" name="wallet" value= "0">	
+                        <input type="hidden" name="token" value= "<?php echo $token; ?>">
+                    <?php } ?>
                 </form>
 		    </td>
         </tr>

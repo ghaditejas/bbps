@@ -29,7 +29,12 @@
                         <div class="col-sm-4">
                             <a class="btn btn-success" href="javascript:walletTopUp()">Add Topup</a>
                         </div>
-                    </div>           
+                    </div> 
+                    <div class="row">
+                        <div class="col-sm-12">
+                        <a class="viewHist" href="/partnerpay/web/bbps/default/view_wallet_history">View History</a>
+                        </div>
+                    </div>          
                 </div>          
             </div>
             

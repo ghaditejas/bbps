@@ -536,6 +536,20 @@ table.dataTable {
 .non-tbbd .table-responsive:after{
     display: none;
 }
+
+.searchable {
+    border: 1px solid #000;
+	width: 196px;
+	background-color: #eee;
+}
+.viewHist{
+    color: #337ab7;
+    font-size: 15px;
+    position: relative;
+    top: 30px;
+    text-decoration: underline;
+
+}
 @media(min-width:768px) {
 	.navbar-nav > li > .dropdown-menu:before{ content:''; display:block;/*width:13px;*/height:7px; margin-top:-7px; margin-right:-96px; background:url("../images/dropdown-menu.png") bottom center no-repeat; }
 	.download-wrap {
@@ -615,10 +629,6 @@ table.dataTable {
 	/*.onoffswitch-checkbox2:checked + .onoffswitch-label2 .onoffswitch-switch2:after{ font-size:13px; top:5px;/*letter-spacing:-0.5px;} */
 }
 
-.searchable {
-    border: 1px solid #000;
-	width: 196px;
-	background-color: #eee;
-}
+
 
 

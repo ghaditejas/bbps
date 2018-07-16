@@ -160,6 +160,7 @@ $(document).ready(function () {
                 success: function(data) {
                     var charges = JSON.parse(data.charges);
                     var charge_mode =  $('#payment_mode').val();
+                    var taxRate = 0.18;
                     calculatedAmount = (charges[charge_mode] * data.sum) / 100;
                     b_chgs = calculatedAmount * taxRate;
                     tot_amt = parseFloat(data.sum) + parseFloat(calculatedAmount) + parseFloat(b_chgs);
