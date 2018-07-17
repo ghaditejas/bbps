@@ -312,553 +312,135 @@ class DefaultController extends HController
         $insert_registered->bindValue(':utility_id',Yii::$app->request->post('utility_name'));
         $insert_registered_data = $insert_registered->execute();
       }
-    // } else {
-    //   $model->IS_REGISTER='y';
-    // }
-    $model->PROVIDER_ID=Yii::$app->request->post('providers');
-    $model->UTILITY_ID=Yii::$app->request->post('utility_name');
-    if($uploadedFile_data['inserted_id']){
-      $model->PROVIDER_BILL_UPLOAD_DETAILS_ID=$uploadedFile_data['inserted_id'];
-    }
-    $model->ACCOUNT_NO=$data['account_id'];
-    $model->DETAILS=$data['details'];
-    $model->FNAME = $data['fname'];
-    $model->LNAME = $data['lname'];
-    $model->EMAIL = $data['email'];
-    $user_data=Yii::$app->user->identity;
-    $model->USER_ID= $user_data['USER_ID'];
-    // $model->INVOICE_ID=$invoice_id;
-    if($model->save(false)){
-      $billing_details_id=$model->getPrimaryKey();
-      return $billing_details_id;
-    }
-    
-  }
-  
-  public function actionListing($invoice_id=""){
-    $connection = Yii::$app->db;
-    $query="SELECT utility_id,utility_name from tbl_utility where is_disabled='n'";
-    $utility = $connection->createCommand($query);
-    $utility_data= $utility->queryAll();
-    return  $this->render('listing',array('utility_data'=>$utility_data));
-  }  
-  
-  public function actionPaid_invoice(){
-    $data=Yii::$app->user->identity;
-    $connection = Yii::$app->db;
-    $all_invoice = $connection
-    ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND b.PAYMENT_STATUS!="" AND INVOICE_ID!=0 GROUP BY INVOICE_ID ORDER BY INVOICE_ID DESC');
-    $all_invoice->bindValue(':userid', $data['USER_ID']);
-    $all_invoice->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
-    $all_invoice->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
-    $all_invoice_data = $all_invoice->queryAll();
-    echo json_encode($all_invoice_data);
-  }
-  
-  public function actionUnpaid_invoice(){
-    $data=Yii::$app->user->identity;
-    $connection = Yii::$app->db;
-    $all_unpaid_invoice = $connection
-    ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND b.PAYMENT_STATUS ="" AND INVOICE_ID!=0 GROUP BY INVOICE_ID ORDER BY INVOICE_ID DESC');
-    $all_unpaid_invoice->bindValue(':userid', $data['USER_ID']);
-    $all_unpaid_invoice->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
-    $all_unpaid_invoice->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
-    $all_unpaid_invoice_data = $all_unpaid_invoice->queryAll();
-    echo json_encode($all_unpaid_invoice_data);
-  }
-  
-  public function actionRegisteration_pending_failed(){
-    $data=Yii::$app->user->identity;
-    $connection = Yii::$app->db;
-    $registeration_failed = $connection
-    ->createCommand('Select b.ACCOUNT_NO,b.PROVIDER_ID,p.provider_name,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND (b.PAYMENT_STATUS ="fail" OR b.RESPONSE_NOT_RECIEVED=1) ORDER BY PROVIDER_BILL_DETAILS_ID DESC');
-    $registeration_failed->bindValue(':userid', $data['USER_ID']);
-    $registeration_failed->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
-    $registeration_failed->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
-    $registeration_failed_data = $registeration_failed->queryAll();
-    echo json_encode($registeration_failed_data);
-  }
-  
-  public function actionPayment($invoice_id){
-    $connection = Yii::$app->db;
-    $invoice = $connection
-    ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
-    $invoice->bindValue(':invoice_id', $invoice_id);
-    $invoice_data = $invoice->queryAll();
-    $sum = $this->calculate_sum($invoice_data);
-    $data=Yii::$app->user->identity;
-    $get_charges = $connection
-    ->createCommand("Select CHARGES,MODES from tbl_charges where USER_ID=:user_id");
-    $get_charges->bindValue(':user_id', $data['USER_ID']);
-    $get_charges_data = $get_charges->queryAll();
-    $wallet = $this->get_wallet_balance();
-    return $this->render('payment',array('invoice_amount'=>$sum,'invoice_data'=>$invoice_data,'provider'=>$invoice_data[0]['provider_name'],'charges'=>$get_charges_data[0],'wallet_balance'=>$wallet['TRANSACTION']['WALLETBALANCE']));
-  }
-  
-  public function calculate_sum($data){
-    $sum=0;
-    foreach($data as $value){
-      $sum = $sum + $value['AMOUNT'];
-    }
-    return $sum;
-  }
-  
-  public function actionDeletemobile(){
-    $connection = Yii::$app->db;
-    $invoice_mobile_delete = $connection->createCommand()
-    ->update('tbl_provider_bill_details', ['REMOVED' => 'y','INVOICE_ID'=> " "], 'INVOICE_ID='.Yii::$app->request->post('invoice_id').' AND ACCOUNT_NO='.Yii::$app->request->post('mobile_no'))->execute();
-    echo $invoice_data;
-    if($invoice_mobile_delete){
-      $invoice = $connection
-      ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
-      $invoice->bindValue(':invoice_id', Yii::$app->request->post('invoice_id'));
-      $invoice_data = $invoice->queryAll();
-      $sum = $this->calculate_sum($invoice_data);
-      echo json_encode(['sum'=>$sum]);
-    } else {
-      echo false;
-    }
-  }
-  
-  public function actionUnpaid(){
-    $data=Yii::$app->user->identity;
-    $connection = Yii::$app->db;
-    if(Yii::$app->request->post('from_date') && Yii::$app->request->post('to_date')){
-      $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND RESPONSE_NOT_RECIEVED=0 AND PAYMENT_STATUS='' AND DUE_DATE >=:from_date AND DUE_DATE <=:to_date ORDER BY DUE_DATE ASC";
-    } else {
-      $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND PAYMENT_STATUS='' AND RESPONSE_NOT_RECIEVED=0  ORDER BY DUE_DATE ASC";
-    }
-    $unpaid = $connection->createCommand($query);
-    $unpaid->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
-    $unpaid->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
-    if(Yii::$app->request->post('from_date') && Yii::$app->request->post('to_date')){
-      $unpaid->bindValue(':from_date', Yii::$app->request->post('from_date'));
-      $unpaid->bindValue(':to_date', Yii::$app->request->post('to_date'));
-    }
-    $unpaid->bindValue(':user_id', $data['USER_ID']);
-    $unpaid_data= $unpaid->queryAll();
-    echo json_encode($unpaid_data);
-  }
-  
-  public function actionPay(){
-    $data=Yii::$app->user->identity;
-    $connection = Yii::$app->db;
-    $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
-    $config = $connection
-    ->createCommand($query);
-    $config->bindValue(':partner_id',$data['PARTNER_ID']);
-    $config_data = $config->queryAll();
-    $chk = new Checksum();
-    $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-    $buyerEmail = trim($data['EMAIL']);
-    $buyerPhone = trim("9869478152");
-    $buyerFirstName = trim($data['FIRST_NAME']);
-    $buyerLastName = trim($data['LAST_NAME']);
-    $amount = trim(Yii::$app->request->post('invoice_amount'));
-    $orderid = trim(Yii::$app->request->post('invoice_no'));
-    $alldata   = $buyerEmail.$buyerFirstName.$buyerLastName.$amount.$orderid;
-    $checksum = $chk->calculateChecksum($alldata.date('Y-m-d'),$privatekey);
-    
-    return $this->render('airpay_payment',array('payment_data'=>Yii::$app->request->post(),"key"=>$privatekey,"checksum"=>$checksum,"mechant_id"=>$config_data[0]['AIRPAY_MERCHANT_ID'],"token"=>$data['WALLET_TOKEN']));
-  }
-  
-  public function actionPaymentresponse(){
-    
-    $model = new TblTranscationDetails();
-    $model->INVOICE_ID = $_POST['TRANSACTIONID'];
-    $model->AIRPAY_ID = $_POST['APTRANSACTIONID'];
-    $model->PAYMENT_DATE = date('Y-m-d');
-    $model->TOTAL_AMOUNT = $_POST['AMOUNT'];
-    $model->FINAL_AMOUNT_RECIEVED = $_POST['AMOUNT'];
-    $model->PAYMENT_STATUS = $_POST['TRANSACTIONPAYMENTSTATUS'];
-    $model->PAYMENT_STATUS_CODE = $_POST['TRANSACTIONSTATUS'];
-    $model->PAY_METHOD = $_POST['TRANSACTIONTYPE'];
-    $model->PAY_MODE = $_POST['CHMOD'];
-    $model->UPDATED_ON= date('Y-m-d');
-    $model->save();
-    if($_POST['TRANSACTIONPAYMENTSTATUS']=='SUCCESS'){
-      $connection = Yii::$app->db;
-      $invoice = $connection
-      ->createCommand("SELECT AMOUNT,BILL_ID,RESPONSE_NOT_RECIEVED,PROVIDER_ID,UTILITY_ID,INVOICE_ID,DUE_DATE,ACCOUNT_NO from tbl_provider_bill_details WHERE INVOICE_ID=:invoice_id AND REMOVED='n'");
-      $invoice->bindValue(':invoice_id', $_POST['TRANSACTIONID']);
-      $invoice_data = $invoice->queryAll();
-      $bill_details=array();
-      foreach($invoice_data as $value){
-        $status= $connection->createCommand()->update('tbl_provider_bill_details', ['PAYMENT_STATUS' => 'pending'], 'INVOICE_ID='.$_POST['TRANSACTIONID'].' AND ACCOUNT_NO='.$value['ACCOUNT_NO'])->execute();
-        $data['viewbillresponseid']=$value['BILL_ID'];
-        $sum=array($value);
-        $data['amount']=$this->calculate_sum($sum);
-        $bill_details[]=$data;
+      // } else {
+        //   $model->IS_REGISTER='y';
+        // }
+        $model->PROVIDER_ID=Yii::$app->request->post('providers');
+        $model->UTILITY_ID=Yii::$app->request->post('utility_name');
+        if($uploadedFile_data['inserted_id']){
+          $model->PROVIDER_BILL_UPLOAD_DETAILS_ID=$uploadedFile_data['inserted_id'];
+        }
+        $model->ACCOUNT_NO=$data['account_id'];
+        $model->DETAILS=$data['details'];
+        $model->FNAME = $data['fname'];
+        $model->LNAME = $data['lname'];
+        $model->EMAIL = $data['email'];
+        $user_data=Yii::$app->user->identity;
+        $model->USER_ID= $user_data['USER_ID'];
+        // $model->INVOICE_ID=$invoice_id;
+        if($model->save(false)){
+          $billing_details_id=$model->getPrimaryKey();
+          return $billing_details_id;
+        }
+        
       }
-      $data2=Yii::$app->user->identity;
-      $connection = Yii::$app->db;
-      $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
-      $config = $connection
-      ->createCommand($query);
-      $config->bindValue(':partner_id',$data2['PARTNER_ID']);
-      $config_data = $config->queryAll();
-      $chk = new Checksum();
-      $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-      $checksum = md5($config_data[0]['AIRPAY_MERCHANT_ID'].'~'.$_POST['AMOUNT'].'~'.Yii::$app->request->post('APTRANSACTIONID'));
-      $apidata=[
-        'private_key'=>$privatekey,
-        'mercid'=>$config_data[0]['AIRPAY_MERCHANT_ID'],
-        'callbackurl'=>'192.168.1.184/partnerpay/web/bbps/billapi/paymentstatus',
-        'checksum'=>$checksum,
-        'airpay_id'=>Yii::$app->request->post('APTRANSACTIONID'),
-        'amountsum'=>$_POST['AMOUNT'],
-        'makepaymentdata'=>$bill_details,
-      ];
-      $api_data = json_encode($apidata);
-      $url='https://devel-payments.airpayme.com/bbps/makePayment.php';
-      $response= $this->api_call($url,$api_data);
-      $log_data = "MAKE PAYMENT DATA RESPONSE : ".json_encode($response);
-      $this->writeLog("Log_Data",$log_data);
-      return $this->render('thankyou');
-    }else{
-      $response = "PAYMENT FAILED";
-      return $this->render('thankyou'); 
-    }
-    
-  }
-  
-  public function actionAdd_mobile(){
-    $invoice_id = $this->invoice_create();
-    foreach(Yii::$app->request->post('provider_bill_details_id')as $value){
-      $connection = Yii::$app->db;  
-      $connection->createCommand()
-      ->update('tbl_provider_bill_details', ['INVOICE_ID'=>$invoice_id,'REMOVED'=>'n'], 'PROVIDER_BILL_DETAILS_ID='.$value)
-      ->execute();
-    }
-    echo $invoice_id;
-  }
-  
-  public function actionAdd_instant_to_archieve(){
-    $data=Yii::$app->user->identity;
-    $connection = Yii::$app->db;
-    $query1="SELECT * FROM tbl_provider_bill_details WHERE DATE(MODIFIED_DATE) = DATE_SUB(CURDATE(), INTERVAL 15 DAY) AND IS_REGISTER='n' AND PAYMENT_STATUS='success' or PAYMENT_STATUS= 'failed'";
-    $registered = $connection
-    ->createCommand($query1);
-    $registered_data = $registered->queryAll();
-    if(sizeof($registered_data)){
-      $query="INSERT into tbl_archived_provider_bill_details SELECT * FROM tbl_provider_bill_details WHERE DATE(MODIFIED_DATE) = DATE_SUB(CURDATE(), INTERVAL 15 DAY) AND IS_REGISTER='n' AND PAYMENT_STATUS='success' or PAYMENT_STATUS= 'failed'";
-      $archieve = $connection
-      ->createCommand($query);
-      $archieve_data = $archieve->execute();
-      if($archieve_data){
-        $query2="DELETE FROM tbl_provider_bill_details WHERE DATE(MODIFIED_DATE) = DATE_SUB(CURDATE(), INTERVAL 15 DAY) AND IS_REGISTER='n' AND PAYMENT_STATUS='success' or PAYMENT_STATUS= 'failed'";
-        $registered = $connection
-        ->createCommand($query2);
-        $registered_data = $registered->execute();
-      }
-    }
-  }  
-  
-  public function notification($invoice_id){
-    $connection = Yii::$app->db;
-    $checkresponse = $connection
-    ->createCommand("SELECT Count(b.PROVIDER_BILL_DETAILS_ID) as bill_recieved, MOBILE from  tbl_provider_bill_details as b INNER JOIN tbl_user_master as u on u.USER_ID = b.USER_ID  where INVOICE_ID=:invoice_id AND RESPONSE_NOT_RECIEVED=0");
-    $checkresponse->bindValue(':invoice_id', $invoice_id);
-    $checkresponse_data = $checkresponse->queryAll();
-    if($checkresponse_data[0]['bill_recieved']%5==0){
-      $signature = 'airpay';
-      $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
       
-      $sms_data = \Yii::$app->params['sms']['data'];
-      $sms_data = str_replace('{{{phone_number}}}', $checkresponse_data[0]['MOBILE'], $sms_data);
-      $sms_data = str_replace('{{{message}}}', urlencode($msg), $sms_data);
-      $sms_data = str_replace('{{{signature}}}', ($signature), $sms_data);
+      public function actionListing($invoice_id=""){
+        $connection = Yii::$app->db;
+        $query="SELECT utility_id,utility_name from tbl_utility where is_disabled='n'";
+        $utility = $connection->createCommand($query);
+        $utility_data= $utility->queryAll();
+        return  $this->render('listing',array('utility_data'=>$utility_data));
+      }  
       
-      $ch = curl_init(\Yii::$app->params['sms']['url'] . $sms_data);
-      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-      $response = curl_exec($ch);
-      curl_close($ch);
-      return $response;
-    } else {
-      $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
-      return $msg;
-    }
-  } 
-  
-  public function api_call($url,$api_data,$wallet=""){
-    $curl = curl_init($url);
-    curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
-    $user_agent = $_SERVER['HTTP_USER_AGENT'];
-    $headers=array();
-    $headers[] = 'User-Agent: '. $user_agent;
-    if($wallet){
-      $headers[] = 'Content-Type: multipart/form-data';
-    } else {
-      $headers[] = 'Content-Type: application/json';
-    }
-    $headers[] = 'Cache-Control: no-cache';
-    curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($curl, CURLOPT_POST, 1);
-    curl_setopt($curl, CURLOPT_POSTFIELDS,$api_data);
-    $curl_response = curl_exec($curl);
-    curl_close($curl);
-    // print_r(json_decode($curl_response,true));
-    // exit;
-    return json_decode($curl_response,true);
-  }
-  
-  public function actionGet_fields($provider_id="",$validation=""){
-    if($provider_id==""){
-      $provider_id=Yii::$app->request->post('provider_id');
-    }
-    $connection = Yii::$app->db;
-    $query="SELECT FIELDS ,VALIDATIONS from tbl_provider WHERE BILLER_MASTER_ID=:biller_master_id";
-    $get_fields = $connection
-    ->createCommand($query);
-    $get_fields->bindValue(':biller_master_id',$provider_id);
-    $get_fields_data = $get_fields->queryAll();
-    $fields= explode('|',$get_fields_data[0]['FIELDS']);
-    if(Yii::$app->request->post('provider_id')){
-      $validtions = explode('::',$get_fields_data[0]['VALIDATIONS']);
-      $fields_validation = array();
-      foreach($fields as $key=>$value){
-        $field['field']=$value;
-        $field['validation']=$validtions[$key];
-        $fields_validation[] = $field;
-      }
-      return json_encode($fields_validation);
-    } else {
-      if($validation == "" ){
-        return json_encode($fields);
-      } else {
-        return json_encode(explode('::',$get_fields_data[0]['VALIDATIONS']));
-      }
-    }
-  }
-  
-  /* cron */
-  public function actionGet_billerid(){
-    // $data=Yii::$app->user->identity;
-    $connection = Yii::$app->db;
-    $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
-    $config = $connection
-    ->createCommand($query);
-    $config->bindValue(':partner_id',$data['PARTNER_ID']);
-    $config_data = $config->queryAll();
-    $chk = new Checksum();
-    $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-    $data = [
-      "privatekey"=>$privatekey,
-      "checksum"=>"",
-      "mercid"=>"245",
-    ];
-    $api_data=json_encode($data);
-    $url="https://devel-payments.airpayme.com/bbps/getBillerId.php";
-    $billerdata = $this->api_call($url,$api_data);
-    foreach($billerdata['BILLERDATA'] as $value){
-      $connection = Yii::$app->db;
-      $query="SELECT utility_id from tbl_utility where utility_name=:utility";
-      $check_utility = $connection->createCommand($query);
-      $check_utility->bindValue(':utility',$value['BILLER_CATEGORY']);
-      $check_utility_data = $check_utility->queryAll();
-      if(sizeof($check_utility_data)>0){
-        $utility_id=$check_utility_data[0]['utility_id'];
-      }else{
+      public function actionPaid_invoice(){
         $data=Yii::$app->user->identity;
-        $query1="INSERT into tbl_utility (utility_name,user_id) VALUES (:utility_name,:user)";
-        $check_utility = $connection
-        ->createCommand($query1);
-        $check_utility->bindValue(':utility_name',$value['BILLER_CATEGORY']);
-        $check_utility->bindValue(':user',1);
-        $check_utility_data = $check_utility->execute();
-        $utility_id = $connection->getLastInsertID();
+        $connection = Yii::$app->db;
+        $all_invoice = $connection
+        ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND b.PAYMENT_STATUS!="" AND INVOICE_ID!=0 GROUP BY INVOICE_ID ORDER BY INVOICE_ID DESC');
+        $all_invoice->bindValue(':userid', $data['USER_ID']);
+        $all_invoice->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
+        $all_invoice->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
+        $all_invoice_data = $all_invoice->queryAll();
+        echo json_encode($all_invoice_data);
       }
-      $query3='SELECT provider_id from tbl_provider where BILLER_MASTER_ID = :biller_master_id';
-      $check_provider=$connection->createCommand($query3);
-      $check_provider->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
-      $check_provider_data = $check_provider->execute();
-      if($check_provider_data){
-        $query4 = "UPDATE tbl_provider SET FIELDS=:fields,VALIDATIONS=:validations WHERE BILLER_MASTER_ID=:biller_master_id";
-        $update_provider=$connection->createCommand($query4);
-        $update_provider->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
-        $update_provider->bindValue(':fields',$value['FIELDNAMES']);
-        $update_provider->bindValue(':validations',$value['VALIDATION']);
-        $update_provider_data = $update_provider->execute();
-      }else{  
-        $query2 = "INSERT into tbl_provider (utility_id,provider_name,FIELDS,BILLER_MASTER_ID,VALIDATIONS) SELECT * FROM (SELECT :utility_id,:provider_name,:fields,:biller_master_id,:validations) AS tmp
-        WHERE NOT EXISTS (
-          SELECT provider_name FROM tbl_provider WHERE provider_name = :provider_name
-          )";
-          $provider_update=$connection->createCommand($query2);
-          $provider_update->bindValue(':utility_id',$utility_id);
-          $provider_update->bindValue(':provider_name',$value['BILLER_NAME']);
-          $provider_update->bindValue(':fields',$value['FIELDNAMES']);
-          $provider_update->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
-          $provider_update->bindValue(':validations',$value['VALIDATION']);
-          $provider_update_data = $provider_update->execute();
-        }
-        // print_r($provider_update_data);
-      }
-    }
-    
-    public function actionDownload_csv_file($provider,$errors=""){
-      $fields[0]='First Name';
-      $fields[1]='Last Name';
-      $fields[2]='Email';
-      $i = 3;
-      $field = json_decode($this->actionGet_fields($provider),true);
-      foreach($field as $value){
-        $fields[$i] = $value;
-        $i++;
-      }
-      if($errors==""){
-        $name = 'SampleFormat.csv';
-        $field[]=$fields;
-      } else {
-        $upload_error = json_decode($errors,true);
-        $name = 'ERRORS.csv';
-        $field = array();
-        $field[]=$fields;
-        foreach($upload_error as $key=>$value){
-          $field[]= $value;
-        } 
-      }
-      header('Content-Type: text/csv');
-      header('Content-Disposition: attachment; filename='. $name);
-      header('Pragma: no-cache');
-      header("Expires: 0");
       
-      $outstream = fopen("php://output", "w");
-      foreach($field as $key=>$value){
-        fputcsv($outstream, $value);
+      public function actionUnpaid_invoice(){
+        $data=Yii::$app->user->identity;
+        $connection = Yii::$app->db;
+        $all_unpaid_invoice = $connection
+        ->createCommand('Select SUM(AMOUNT) as invoice_amount,b.INVOICE_ID,b.PROVIDER_ID,p.provider_name,b.PAYMENT_STATUS,b.PROVIDER_BILL_DETAILS_ID,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND b.PAYMENT_STATUS ="" AND INVOICE_ID!=0 GROUP BY INVOICE_ID ORDER BY INVOICE_ID DESC');
+        $all_unpaid_invoice->bindValue(':userid', $data['USER_ID']);
+        $all_unpaid_invoice->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
+        $all_unpaid_invoice->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
+        $all_unpaid_invoice_data = $all_unpaid_invoice->queryAll();
+        echo json_encode($all_unpaid_invoice_data);
       }
-      fclose($outstream);
-      // exit;
-    }
-    public function actionGenerate_bill_receipt($bill_details_id) {
-      $connection = Yii::$app->db;
-      $query="SELECT b.BANK_REF_PAYMENT_NUMBER,b.ACCOUNT_NO,b.PAYMENT_STATUS,b.AMOUNT,b.FNAME,b.DUE_DATE,b.LNAME,b.EMAIL,tr.PAY_MODE,tr.CREATED_ON,tr.AIRPAY_ID,p.provider_name from tbl_provider_bill_details as b JOIN tbl_transcation_details as tr on tr.INVOICE_ID = b.INVOICE_ID  JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.PROVIDER_BILL_DETAILS_ID=:bill_details_id";
-      $receipt = $connection
-      ->createCommand($query);
-      $receipt->bindValue(':bill_details_id',$bill_details_id);
-      $receipt_data = $receipt->queryAll();
-      $taxRate = 0.18;
-      $data=Yii::$app->user->identity;
-      $get_charges = $connection
-      ->createCommand("Select CHARGES,MODES from tbl_charges where USER_ID=:user_id");
-      $get_charges->bindValue(':user_id', $data['USER_ID']);
-      $get_charges_data = $get_charges->queryAll();
-      $charge = json_decode($get_charges_data[0]['CHARGES'],true);
-      $calculatedAmount = ($charge[$receipt_data[0]['PAY_MODE']] * $receipt_data[0]['AMOUNT']) / 100;
-      $b_chgs = $calculatedAmount * $taxRate;
-      $total_charge = $calculatedAmount+$b_chgs;
-      $content = $this->renderPartial('receipt-bbps',array('receipt'=>$receipt_data[0],'charge'=>round($total_charge,2)));
-      $pdf = new Pdf([
-        'mode' => Pdf::MODE_CORE, 
-        'format' => Pdf::FORMAT_A4, 
-        'orientation' => Pdf::ORIENT_PORTRAIT, 
-        'destination' => Pdf::DEST_BROWSER, 
-        'content' => $content,  
-        'cssFile' => '@vendor/kartik-v/yii2-mpdf/assets/kv-mpdf-bootstrap.min.css',
-        'cssInline' => '.kv-heading-1{font-size:18px}', 
-        'options' => ['title' => 'BBPS RECEIPT'],
-        'methods' => [ 
-          'SetHeader'=>['BBPS RECEIPT'], 
-          'SetFooter'=>['{PAGENO}'],
-          ]
-          ]);
-          return $pdf->render(); 
+      
+      public function actionRegisteration_pending_failed(){
+        $data=Yii::$app->user->identity;
+        $connection = Yii::$app->db;
+        $registeration_failed = $connection
+        ->createCommand('Select b.ACCOUNT_NO,b.PROVIDER_ID,p.provider_name,u.utility_name from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID JOIN tbl_utility as u on b.UTILITY_ID=u.utility_id where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND b.USER_ID=:userid AND (b.PAYMENT_STATUS ="fail" OR b.RESPONSE_NOT_RECIEVED=1) ORDER BY PROVIDER_BILL_DETAILS_ID DESC');
+        $registeration_failed->bindValue(':userid', $data['USER_ID']);
+        $registeration_failed->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
+        $registeration_failed->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
+        $registeration_failed_data = $registeration_failed->queryAll();
+        echo json_encode($registeration_failed_data);
+      }
+      
+      public function actionPayment($invoice_id){
+        $connection = Yii::$app->db;
+        $invoice = $connection
+        ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
+        $invoice->bindValue(':invoice_id', $invoice_id);
+        $invoice_data = $invoice->queryAll();
+        $sum = $this->calculate_sum($invoice_data);
+        $data=Yii::$app->user->identity;
+        $get_charges = $connection
+        ->createCommand("Select CHARGES,MODES from tbl_charges where USER_ID=:user_id");
+        $get_charges->bindValue(':user_id', $data['USER_ID']);
+        $get_charges_data = $get_charges->queryAll();
+        $wallet = $this->get_wallet_balance();
+        return $this->render('payment',array('invoice_amount'=>$sum,'invoice_data'=>$invoice_data,'provider'=>$invoice_data[0]['provider_name'],'charges'=>$get_charges_data[0],'wallet_balance'=>$wallet['TRANSACTION']['WALLETBALANCE']));
+      }
+      
+      public function calculate_sum($data){
+        $sum=0;
+        foreach($data as $value){
+          $sum = $sum + $value['AMOUNT'];
         }
-        
-        public function actionGet_invoice_data(){
-          $connection = Yii::$app->db;
-          $query="SELECT PROVIDER_BILL_DETAILS_ID,ACCOUNT_NO,PAYMENT_STATUS,AMOUNT,DUE_DATE from tbl_provider_bill_details where INVOICE_ID=:invoice_id";
-          $invoice_data = $connection
-          ->createCommand($query);
-          $invoice_data->bindValue(':invoice_id',Yii::$app->request->post('invoice_id'));
-          $invoice_recieved_data = $invoice_data->queryAll();
-          echo json_encode($invoice_recieved_data);
-          exit;
-        }
-        
-        public function actionPayment_amount_check(){
-          $connection = Yii::$app->db;
+        return $sum;
+      }
+      
+      public function actionDeletemobile(){
+        $connection = Yii::$app->db;
+        $invoice_mobile_delete = $connection->createCommand()
+        ->update('tbl_provider_bill_details', ['REMOVED' => 'y','INVOICE_ID'=> " "], 'INVOICE_ID='.Yii::$app->request->post('invoice_id').' AND ACCOUNT_NO='.Yii::$app->request->post('mobile_no'))->execute();
+        echo $invoice_data;
+        if($invoice_mobile_delete){
           $invoice = $connection
-          ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
+          ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
           $invoice->bindValue(':invoice_id', Yii::$app->request->post('invoice_id'));
           $invoice_data = $invoice->queryAll();
           $sum = $this->calculate_sum($invoice_data);
-          $data=Yii::$app->user->identity;
-          $get_charges = $connection
-          ->createCommand("Select CHARGES from tbl_charges where USER_ID=:user_id");
-          $get_charges->bindValue(':user_id', $data['USER_ID']);
-          $get_charges_data = $get_charges->queryAll();
-          $payment_data = array();
-          $payment_data['sum']=$sum;
-          $payment_data['charges']=$get_charges_data[0]['CHARGES'];
-          echo json_encode($payment_data);
-          exit;
+          echo json_encode(['sum'=>$sum]);
+        } else {
+          echo false;
         }
-        
-        public function check_account_id($account_no){
-          $connection = Yii::$app->db;
-          $check_account_id = $connection
-          ->createCommand("Select ACCOUNT_NO from tbl_provider_bill_details where ACCOUNT_NO=:account_no AND REMOVED='n'");
-          $check_account_id->bindValue(':account_no', $account_no);
-          $check_account_id_data = $check_account_id->queryAll();
-          if(sizeof($check_account_id_data)){
-            return true;
-          }else{
-            return false;
-          }
-        }
-        
-        public function actionWallet_top_up(){
-          $data=Yii::$app->user->identity;
-          $connection = Yii::$app->db;
-          $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
-          $config = $connection
-          ->createCommand($query);
-          $config->bindValue(':partner_id',$data['PARTNER_ID']);
-          $config_data = $config->queryAll();
-          $chk = new Checksum();
-          $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-          $api_data=[
-            "txnmode"=>"credit",
-            "mercid"=>$config_data[0]['AIRPAY_MERCHANT_ID'],
-            "token"=>$data['WALLET_TOKEN'],
-            "walletUser"=>$data['EMAIL'],
-            "orderid"=>"255",
-            "amount"=>"100",
-            "mer_dom"=>base64_encode("http://localhost"),
-            "outputFormat"=>"json",
-            "checksum"=>md5($config_data[0]['AIRPAY_MERCHANT_ID'].$data['WALLET_TOKEN'].$data['EMAIL']."credit255100".date('Y-m-d').$privatekey),
-            "privatekey"=>$privatekey,
-          ];
-          $url="https://devel-payments.airpayme.com/wallet/api/walletTxn.php";
-          $wallet_top_up_response = $this->api_call($url,$api_data,1);
-          echo (json_encode($wallet_top_up_response['TRANSACTION']));
-          exit;
-        }
-
-        public function get_wallet_balance(){
-          $data=Yii::$app->user->identity;
-          $connection = Yii::$app->db;
-          $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
-          $config = $connection
-          ->createCommand($query);
-          $config->bindValue(':partner_id',$data['PARTNER_ID']);
-          $config_data = $config->queryAll();
-          $chk = new Checksum();
-          $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-          $wallet_data["mercid"]=$config_data[0]['AIRPAY_MERCHANT_ID'];
-          $wallet_data["walletUser"]=$data['EMAIL'];
-          $wallet_data["token"]=$data['WALLET_TOKEN'];
-          $wallet_data["outputFormat"]="json";
-          $wallet_data["privatekey"] = $privatekey;
-          $wallet_data["checksum"]=md5($wallet_data["mercid"].$wallet_data["token"].$wallet_data["walletUser"].date('Y-m-d').$wallet_data["privatekey"]);
-          $url="https://devel-payments.airpayme.com/wallet/api/walletBalance.php";
-          $wallet_data_response = $this->api_call($url,$wallet_data,1);
-          return $wallet_data_response; 
-        }
+      }
       
-      public function actionView_wallet_history(){
+      public function actionUnpaid(){
+        $data=Yii::$app->user->identity;
+        $connection = Yii::$app->db;
+        if(Yii::$app->request->post('from_date') && Yii::$app->request->post('to_date')){
+          $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND RESPONSE_NOT_RECIEVED=0 AND PAYMENT_STATUS='' AND DUE_DATE >=:from_date AND DUE_DATE <=:to_date ORDER BY DUE_DATE ASC";
+        } else {
+          $query="SELECT b.PROVIDER_BILL_DETAILS_ID,b.AMOUNT,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,DATE_FORMAT(b.DUE_DATE,'%d/%m/%Y')as DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.UTILITY_ID=:utility_id AND b.PROVIDER_ID=:provider_id AND USER_ID=:user_id AND PAYMENT_STATUS='' AND RESPONSE_NOT_RECIEVED=0  ORDER BY DUE_DATE ASC";
+        }
+        $unpaid = $connection->createCommand($query);
+        $unpaid->bindValue(':utility_id', Yii::$app->request->post('utility_id'));
+        $unpaid->bindValue(':provider_id', Yii::$app->request->post('provider_id'));
+        if(Yii::$app->request->post('from_date') && Yii::$app->request->post('to_date')){
+          $unpaid->bindValue(':from_date', Yii::$app->request->post('from_date'));
+          $unpaid->bindValue(':to_date', Yii::$app->request->post('to_date'));
+        }
+        $unpaid->bindValue(':user_id', $data['USER_ID']);
+        $unpaid_data= $unpaid->queryAll();
+        echo json_encode($unpaid_data);
+      }
+      
+      public function actionPay(){
         $data=Yii::$app->user->identity;
         $connection = Yii::$app->db;
         $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
@@ -868,20 +450,444 @@ class DefaultController extends HController
         $config_data = $config->queryAll();
         $chk = new Checksum();
         $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
-        $api_data =  [
-            "mercid"=>$config_data[0]['AIRPAY_MERCHANT_ID'],
-            "token"=>$data['WALLET_TOKEN'],
-            "privatekey"=>$privatekey,
-            "walletUser"=>$data['EMAIL'],
-            "displayorder"=>'desc',
-            "displayrec"=>"10000",
-            "displaypage"=>"",
-            "outputFormat"=>"json",
-            "checksum"=>md5($config_data[0]['AIRPAY_MERCHANT_ID'].$data['WALLET_TOKEN'].$data['EMAIL']."desc10000".date('Y-m-d').$privatekey),
-          ];
-        $url="https://devel-payments.airpayme.com/wallet/api/walletHistory.php";
-        $wallet_data_response = $this->api_call($url,$api_data,1);
-        return $this->render('wallet_history_listing',array('wallet_history'=>$wallet_data_response['TRANSACTION']['WALLETTXNS']['WALLETTXN']));    
+        $buyerEmail = trim($data['EMAIL']);
+        $buyerPhone = trim("9869478152");
+        $buyerFirstName = trim($data['FIRST_NAME']);
+        $buyerLastName = trim($data['LAST_NAME']);
+        $amount = trim(Yii::$app->request->post('invoice_amount'));
+        $orderid = trim(Yii::$app->request->post('invoice_no'));
+        $alldata   = $buyerEmail.$buyerFirstName.$buyerLastName.$amount.$orderid;
+        $checksum = $chk->calculateChecksum($alldata.date('Y-m-d'),$privatekey);
+        
+        return $this->render('airpay_payment',array('payment_data'=>Yii::$app->request->post(),"key"=>$privatekey,"checksum"=>$checksum,"mechant_id"=>$config_data[0]['AIRPAY_MERCHANT_ID'],"token"=>$data['WALLET_TOKEN']));
+      }
+      
+      public function actionPaymentresponse(){
+        print_r($_POST);
+        exit;
+        $model = new TblTranscationDetails();
+        $model->INVOICE_ID = $_POST['TRANSACTIONID'];
+        $model->AIRPAY_ID = $_POST['APTRANSACTIONID'];
+        $model->PAYMENT_DATE = date('Y-m-d');
+        $model->TOTAL_AMOUNT = $_POST['AMOUNT'];
+        $model->FINAL_AMOUNT_RECIEVED = $_POST['AMOUNT'];
+        $model->PAYMENT_STATUS = $_POST['TRANSACTIONPAYMENTSTATUS'];
+        $model->PAYMENT_STATUS_CODE = $_POST['TRANSACTIONSTATUS'];
+        $model->PAY_METHOD = $_POST['TRANSACTIONTYPE'];
+        $model->PAY_MODE = $_POST['CHMOD'];
+        $model->UPDATED_ON= date('Y-m-d');
+        $model->save();
+        if($_POST['TRANSACTIONPAYMENTSTATUS']=='SUCCESS'){
+          if(isset($_POST['WALLETBALANCE'])){
+            $this->redirect('/partnerpay/web/bbps/default/biller');
+          } else{
+            $connection = Yii::$app->db;
+            $invoice = $connection
+            ->createCommand("SELECT AMOUNT,BILL_ID,RESPONSE_NOT_RECIEVED,PROVIDER_ID,UTILITY_ID,INVOICE_ID,DUE_DATE,ACCOUNT_NO from tbl_provider_bill_details WHERE INVOICE_ID=:invoice_id AND REMOVED='n'");
+            $invoice->bindValue(':invoice_id', $_POST['TRANSACTIONID']);
+            $invoice_data = $invoice->queryAll();
+            $bill_details=array();
+            foreach($invoice_data as $value){
+              $status= $connection->createCommand()->update('tbl_provider_bill_details', ['PAYMENT_STATUS' => 'pending'], 'INVOICE_ID='.$_POST['TRANSACTIONID'].' AND ACCOUNT_NO='.$value['ACCOUNT_NO'])->execute();
+              $data['viewbillresponseid']=$value['BILL_ID'];
+              $sum=array($value);
+              $data['amount']=$this->calculate_sum($sum);
+              $bill_details[]=$data;
+            }
+            $data2=Yii::$app->user->identity;
+            $connection = Yii::$app->db;
+            $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+            $config = $connection
+            ->createCommand($query);
+            $config->bindValue(':partner_id',$data2['PARTNER_ID']);
+            $config_data = $config->queryAll();
+            $chk = new Checksum();
+            $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+            $checksum = md5($config_data[0]['AIRPAY_MERCHANT_ID'].'~'.$_POST['AMOUNT'].'~'.Yii::$app->request->post('APTRANSACTIONID'));
+            $apidata=[
+              'private_key'=>$privatekey,
+              'mercid'=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+              'callbackurl'=>'192.168.1.184/partnerpay/web/bbps/billapi/paymentstatus',
+              'checksum'=>$checksum,
+              'airpay_id'=>Yii::$app->request->post('APTRANSACTIONID'),
+              'amountsum'=>$_POST['AMOUNT'],
+              'makepaymentdata'=>$bill_details,
+            ];
+            $api_data = json_encode($apidata);
+            $url='https://devel-payments.airpayme.com/bbps/makePayment.php';
+            $response= $this->api_call($url,$api_data);
+            $log_data = "MAKE PAYMENT DATA RESPONSE : ".json_encode($response);
+            $this->writeLog("Log_Data",$log_data);
+            return $this->render('thankyou');
+          }
+        }else{
+          $response = "PAYMENT FAILED";
+          return $this->render('thankyou'); 
+        }
+        
+      }
+      
+      public function actionAdd_mobile(){
+        $invoice_id = $this->invoice_create();
+        foreach(Yii::$app->request->post('provider_bill_details_id')as $value){
+          $connection = Yii::$app->db;  
+          $connection->createCommand()
+          ->update('tbl_provider_bill_details', ['INVOICE_ID'=>$invoice_id,'REMOVED'=>'n'], 'PROVIDER_BILL_DETAILS_ID='.$value)
+          ->execute();
+        }
+        echo $invoice_id;
+      }
+      
+      public function actionAdd_instant_to_archieve(){
+        $data=Yii::$app->user->identity;
+        $connection = Yii::$app->db;
+        $query1="SELECT * FROM tbl_provider_bill_details WHERE DATE(MODIFIED_DATE) = DATE_SUB(CURDATE(), INTERVAL 15 DAY) AND IS_REGISTER='n' AND PAYMENT_STATUS='success' or PAYMENT_STATUS= 'failed'";
+        $registered = $connection
+        ->createCommand($query1);
+        $registered_data = $registered->queryAll();
+        if(sizeof($registered_data)){
+          $query="INSERT into tbl_archived_provider_bill_details SELECT * FROM tbl_provider_bill_details WHERE DATE(MODIFIED_DATE) = DATE_SUB(CURDATE(), INTERVAL 15 DAY) AND IS_REGISTER='n' AND PAYMENT_STATUS='success' or PAYMENT_STATUS= 'failed'";
+          $archieve = $connection
+          ->createCommand($query);
+          $archieve_data = $archieve->execute();
+          if($archieve_data){
+            $query2="DELETE FROM tbl_provider_bill_details WHERE DATE(MODIFIED_DATE) = DATE_SUB(CURDATE(), INTERVAL 15 DAY) AND IS_REGISTER='n' AND PAYMENT_STATUS='success' or PAYMENT_STATUS= 'failed'";
+            $registered = $connection
+            ->createCommand($query2);
+            $registered_data = $registered->execute();
+          }
+        }
+      }  
+      
+      public function notification($invoice_id){
+        $connection = Yii::$app->db;
+        $checkresponse = $connection
+        ->createCommand("SELECT Count(b.PROVIDER_BILL_DETAILS_ID) as bill_recieved, MOBILE from  tbl_provider_bill_details as b INNER JOIN tbl_user_master as u on u.USER_ID = b.USER_ID  where INVOICE_ID=:invoice_id AND RESPONSE_NOT_RECIEVED=0");
+        $checkresponse->bindValue(':invoice_id', $invoice_id);
+        $checkresponse_data = $checkresponse->queryAll();
+        if($checkresponse_data[0]['bill_recieved']%5==0){
+          $signature = 'airpay';
+          $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
+          
+          $sms_data = \Yii::$app->params['sms']['data'];
+          $sms_data = str_replace('{{{phone_number}}}', $checkresponse_data[0]['MOBILE'], $sms_data);
+          $sms_data = str_replace('{{{message}}}', urlencode($msg), $sms_data);
+          $sms_data = str_replace('{{{signature}}}', ($signature), $sms_data);
+          
+          $ch = curl_init(\Yii::$app->params['sms']['url'] . $sms_data);
+          curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+          $response = curl_exec($ch);
+          curl_close($ch);
+          return $response;
+        } else {
+          $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
+          return $msg;
+        }
+      } 
+      
+      public function api_call($url,$api_data,$wallet=""){
+        $curl = curl_init($url);
+        curl_setopt($curl,CURLOPT_SSL_VERIFYPEER, false);
+        $user_agent = $_SERVER['HTTP_USER_AGENT'];
+        $headers=array();
+        $headers[] = 'User-Agent: '. $user_agent;
+        if($wallet){
+          $headers[] = 'Content-Type: multipart/form-data';
+        } else {
+          $headers[] = 'Content-Type: application/json';
+        }
+        $headers[] = 'Cache-Control: no-cache';
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS,$api_data);
+        $curl_response = curl_exec($curl);
+        curl_close($curl);
+        // print_r(json_decode($curl_response,true));
+        // exit;
+        return json_decode($curl_response,true);
+      }
+      
+      public function actionGet_fields($provider_id="",$validation=""){
+        if($provider_id==""){
+          $provider_id=Yii::$app->request->post('provider_id');
+        }
+        $connection = Yii::$app->db;
+        $query="SELECT FIELDS ,VALIDATIONS from tbl_provider WHERE BILLER_MASTER_ID=:biller_master_id";
+        $get_fields = $connection
+        ->createCommand($query);
+        $get_fields->bindValue(':biller_master_id',$provider_id);
+        $get_fields_data = $get_fields->queryAll();
+        $fields= explode('|',$get_fields_data[0]['FIELDS']);
+        if(Yii::$app->request->post('provider_id')){
+          $validtions = explode('::',$get_fields_data[0]['VALIDATIONS']);
+          $fields_validation = array();
+          foreach($fields as $key=>$value){
+            $field['field']=$value;
+            $field['validation']=$validtions[$key];
+            $fields_validation[] = $field;
+          }
+          return json_encode($fields_validation);
+        } else {
+          if($validation == "" ){
+            return json_encode($fields);
+          } else {
+            return json_encode(explode('::',$get_fields_data[0]['VALIDATIONS']));
+          }
         }
       }
       
+      /* cron */
+      public function actionGet_billerid(){
+        // $data=Yii::$app->user->identity;
+        $connection = Yii::$app->db;
+        $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+        $config = $connection
+        ->createCommand($query);
+        $config->bindValue(':partner_id',$data['PARTNER_ID']);
+        $config_data = $config->queryAll();
+        $chk = new Checksum();
+        $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+        $data = [
+          "privatekey"=>$privatekey,
+          "checksum"=>"",
+          "mercid"=>"245",
+        ];
+        $api_data=json_encode($data);
+        $url="https://devel-payments.airpayme.com/bbps/getBillerId.php";
+        $billerdata = $this->api_call($url,$api_data);
+        foreach($billerdata['BILLERDATA'] as $value){
+          $connection = Yii::$app->db;
+          $query="SELECT utility_id from tbl_utility where utility_name=:utility";
+          $check_utility = $connection->createCommand($query);
+          $check_utility->bindValue(':utility',$value['BILLER_CATEGORY']);
+          $check_utility_data = $check_utility->queryAll();
+          if(sizeof($check_utility_data)>0){
+            $utility_id=$check_utility_data[0]['utility_id'];
+          }else{
+            $data=Yii::$app->user->identity;
+            $query1="INSERT into tbl_utility (utility_name,user_id) VALUES (:utility_name,:user)";
+            $check_utility = $connection
+            ->createCommand($query1);
+            $check_utility->bindValue(':utility_name',$value['BILLER_CATEGORY']);
+            $check_utility->bindValue(':user',1);
+            $check_utility_data = $check_utility->execute();
+            $utility_id = $connection->getLastInsertID();
+          }
+          $query3='SELECT provider_id from tbl_provider where BILLER_MASTER_ID = :biller_master_id';
+          $check_provider=$connection->createCommand($query3);
+          $check_provider->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
+          $check_provider_data = $check_provider->execute();
+          if($check_provider_data){
+            $query4 = "UPDATE tbl_provider SET FIELDS=:fields,VALIDATIONS=:validations WHERE BILLER_MASTER_ID=:biller_master_id";
+            $update_provider=$connection->createCommand($query4);
+            $update_provider->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
+            $update_provider->bindValue(':fields',$value['FIELDNAMES']);
+            $update_provider->bindValue(':validations',$value['VALIDATION']);
+            $update_provider_data = $update_provider->execute();
+          }else{  
+            $query2 = "INSERT into tbl_provider (utility_id,provider_name,FIELDS,BILLER_MASTER_ID,VALIDATIONS) SELECT * FROM (SELECT :utility_id,:provider_name,:fields,:biller_master_id,:validations) AS tmp
+            WHERE NOT EXISTS (
+              SELECT provider_name FROM tbl_provider WHERE provider_name = :provider_name
+              )";
+              $provider_update=$connection->createCommand($query2);
+              $provider_update->bindValue(':utility_id',$utility_id);
+              $provider_update->bindValue(':provider_name',$value['BILLER_NAME']);
+              $provider_update->bindValue(':fields',$value['FIELDNAMES']);
+              $provider_update->bindValue(':biller_master_id',$value['BILLER_MASTER_ID']);
+              $provider_update->bindValue(':validations',$value['VALIDATION']);
+              $provider_update_data = $provider_update->execute();
+            }
+            // print_r($provider_update_data);
+          }
+        }
+        
+        public function actionDownload_csv_file($provider,$errors=""){
+          $fields[0]='First Name';
+          $fields[1]='Last Name';
+          $fields[2]='Email';
+          $i = 3;
+          $field = json_decode($this->actionGet_fields($provider),true);
+          foreach($field as $value){
+            $fields[$i] = $value;
+            $i++;
+          }
+          if($errors==""){
+            $name = 'SampleFormat.csv';
+            $field[]=$fields;
+          } else {
+            $upload_error = json_decode($errors,true);
+            $name = 'ERRORS.csv';
+            $field = array();
+            $field[]=$fields;
+            foreach($upload_error as $key=>$value){
+              $field[]= $value;
+            } 
+          }
+          header('Content-Type: text/csv');
+          header('Content-Disposition: attachment; filename='. $name);
+          header('Pragma: no-cache');
+          header("Expires: 0");
+          
+          $outstream = fopen("php://output", "w");
+          foreach($field as $key=>$value){
+            fputcsv($outstream, $value);
+          }
+          fclose($outstream);
+          // exit;
+        }
+        public function actionGenerate_bill_receipt($bill_details_id) {
+          $connection = Yii::$app->db;
+          $query="SELECT b.BANK_REF_PAYMENT_NUMBER,b.ACCOUNT_NO,b.PAYMENT_STATUS,b.AMOUNT,b.FNAME,b.DUE_DATE,b.LNAME,b.EMAIL,tr.PAY_MODE,tr.CREATED_ON,tr.AIRPAY_ID,p.provider_name from tbl_provider_bill_details as b JOIN tbl_transcation_details as tr on tr.INVOICE_ID = b.INVOICE_ID  JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.PROVIDER_BILL_DETAILS_ID=:bill_details_id";
+          $receipt = $connection
+          ->createCommand($query);
+          $receipt->bindValue(':bill_details_id',$bill_details_id);
+          $receipt_data = $receipt->queryAll();
+          $taxRate = 0.18;
+          $data=Yii::$app->user->identity;
+          $get_charges = $connection
+          ->createCommand("Select CHARGES,MODES from tbl_charges where USER_ID=:user_id");
+          $get_charges->bindValue(':user_id', $data['USER_ID']);
+          $get_charges_data = $get_charges->queryAll();
+          $charge = json_decode($get_charges_data[0]['CHARGES'],true);
+          $calculatedAmount = ($charge[$receipt_data[0]['PAY_MODE']] * $receipt_data[0]['AMOUNT']) / 100;
+          $b_chgs = $calculatedAmount * $taxRate;
+          $total_charge = $calculatedAmount+$b_chgs;
+          $content = $this->renderPartial('receipt-bbps',array('receipt'=>$receipt_data[0],'charge'=>round($total_charge,2)));
+          $pdf = new Pdf([
+            'mode' => Pdf::MODE_CORE, 
+            'format' => Pdf::FORMAT_A4, 
+            'orientation' => Pdf::ORIENT_PORTRAIT, 
+            'destination' => Pdf::DEST_BROWSER, 
+            'content' => $content,  
+            'cssFile' => '@vendor/kartik-v/yii2-mpdf/assets/kv-mpdf-bootstrap.min.css',
+            'cssInline' => '.kv-heading-1{font-size:18px}', 
+            'options' => ['title' => 'BBPS RECEIPT'],
+            'methods' => [ 
+              'SetHeader'=>['BBPS RECEIPT'], 
+              'SetFooter'=>['{PAGENO}'],
+              ]
+              ]);
+              return $pdf->render(); 
+            }
+            
+            public function actionGet_invoice_data(){
+              $connection = Yii::$app->db;
+              $query="SELECT PROVIDER_BILL_DETAILS_ID,ACCOUNT_NO,PAYMENT_STATUS,AMOUNT,DUE_DATE from tbl_provider_bill_details where INVOICE_ID=:invoice_id";
+              $invoice_data = $connection
+              ->createCommand($query);
+              $invoice_data->bindValue(':invoice_id',Yii::$app->request->post('invoice_id'));
+              $invoice_recieved_data = $invoice_data->queryAll();
+              echo json_encode($invoice_recieved_data);
+              exit;
+            }
+            
+            public function actionPayment_amount_check(){
+              $connection = Yii::$app->db;
+              $invoice = $connection
+              ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.BILLER_MASTER_ID where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
+              $invoice->bindValue(':invoice_id', Yii::$app->request->post('invoice_id'));
+              $invoice_data = $invoice->queryAll();
+              $sum = $this->calculate_sum($invoice_data);
+              $data=Yii::$app->user->identity;
+              $get_charges = $connection
+              ->createCommand("Select CHARGES from tbl_charges where USER_ID=:user_id");
+              $get_charges->bindValue(':user_id', $data['USER_ID']);
+              $get_charges_data = $get_charges->queryAll();
+              $payment_data = array();
+              $payment_data['sum']=$sum;
+              $payment_data['charges']=$get_charges_data[0]['CHARGES'];
+              echo json_encode($payment_data);
+              exit;
+            }
+            
+            public function check_account_id($account_no){
+              $connection = Yii::$app->db;
+              $check_account_id = $connection
+              ->createCommand("Select ACCOUNT_NO from tbl_provider_bill_details where ACCOUNT_NO=:account_no AND REMOVED='n'");
+              $check_account_id->bindValue(':account_no', $account_no);
+              $check_account_id_data = $check_account_id->queryAll();
+              if(sizeof($check_account_id_data)){
+                return true;
+              }else{
+                return false;
+              }
+            }
+            
+            public function actionWallet_top_up(){
+              $data=Yii::$app->user->identity;
+              $connection = Yii::$app->db;
+              $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+              $config = $connection
+              ->createCommand($query);
+              $config->bindValue(':partner_id',$data['PARTNER_ID']);
+              $config_data = $config->queryAll();
+              $chk = new Checksum();
+              $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+              $api_data=[
+                "txnmode"=>"credit",
+                "mercid"=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+                "token"=>$data['WALLET_TOKEN'],
+                "walletUser"=>$data['EMAIL'],
+                "orderid"=>"255",
+                "amount"=>"100",
+                "mer_dom"=>base64_encode("http://localhost"),
+                "outputFormat"=>"json",
+                "checksum"=>md5($config_data[0]['AIRPAY_MERCHANT_ID'].$data['WALLET_TOKEN'].$data['EMAIL']."credit255100".date('Y-m-d').$privatekey),
+                "privatekey"=>$privatekey,
+                "wallet"=>1,
+              ];
+              $url="https://devel-payments.airpayme.com/wallet/api/walletTxn.php";
+              $wallet_top_up_response = $this->api_call($url,$api_data,1);
+              echo (json_encode($wallet_top_up_response['TRANSACTION']));
+              exit;
+            }
+            
+            public function get_wallet_balance(){
+              $data=Yii::$app->user->identity;
+              $connection = Yii::$app->db;
+              $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+              $config = $connection
+              ->createCommand($query);
+              $config->bindValue(':partner_id',$data['PARTNER_ID']);
+              $config_data = $config->queryAll();
+              $chk = new Checksum();
+              $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+              $wallet_data["mercid"]=$config_data[0]['AIRPAY_MERCHANT_ID'];
+              $wallet_data["walletUser"]=$data['EMAIL'];
+              $wallet_data["token"]=$data['WALLET_TOKEN'];
+              $wallet_data["outputFormat"]="json";
+              $wallet_data["privatekey"] = $privatekey;
+              $wallet_data["checksum"]=md5($wallet_data["mercid"].$wallet_data["token"].$wallet_data["walletUser"].date('Y-m-d').$wallet_data["privatekey"]);
+              $url="https://devel-payments.airpayme.com/wallet/api/walletBalance.php";
+              $wallet_data_response = $this->api_call($url,$wallet_data,1);
+              return $wallet_data_response; 
+            }
+            
+            public function actionView_wallet_history(){
+              $data=Yii::$app->user->identity;
+              $connection = Yii::$app->db;
+              $query="SELECT AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY from tbl_partner_master WHERE PARTNER_ID=:partner_id";
+              $config = $connection
+              ->createCommand($query);
+              $config->bindValue(':partner_id',$data['PARTNER_ID']);
+              $config_data = $config->queryAll();
+              $chk = new Checksum();
+              $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
+              $api_data =  [
+                "mercid"=>$config_data[0]['AIRPAY_MERCHANT_ID'],
+                "token"=>$data['WALLET_TOKEN'],
+                "privatekey"=>$privatekey,
+                "walletUser"=>$data['EMAIL'],
+                "displayorder"=>'desc',
+                "displayrec"=>"10000",
+                "displaypage"=>"",
+                "outputFormat"=>"json",
+                "checksum"=>md5($config_data[0]['AIRPAY_MERCHANT_ID'].$data['WALLET_TOKEN'].$data['EMAIL']."desc10000".date('Y-m-d').$privatekey),
+              ];
+              $url="https://devel-payments.airpayme.com/wallet/api/walletHistory.php";
+              $wallet_data_response = $this->api_call($url,$api_data,1);
+              return $this->render('wallet_history_listing',array('wallet_history'=>$wallet_data_response['TRANSACTION']['WALLETTXNS']['WALLETTXN']));    
+            }
+          }
+          

@@ -302,6 +302,9 @@ function applyCharge(){
 		if(charge_mode == "ppc" && tot_amt>wallet){
 			$('#pay').addClass('hidden');
 			$('#top_up').removeClass('hidden');
+		} else {
+			$('#pay').removeClass('hidden');
+			$('#top_up').addClass('hidden');
 		}
 	} else {
 		$('#total_amount').val(amount);

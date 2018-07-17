@@ -106,18 +106,6 @@
 							</table>
 						</td>
 					</tr>
-					<!-- <tr>
-						<td align="center" valign="top">
-							<table width="800" border="0" cellspacing="20" cellpadding="5">
-								<tr>
-									<td align="right" valign="top" style="font-size:13px; line-height:18px;">
-										<button type="button" onclick="" style="font-size:13px; line-height:18px; margin-right:10px; cursor: pointer;">Make Another Payment</button>
-										<button type="button" onclick=""style="font-size:13px; line-height:18px; margin-right:10px; cursor: pointer;">Print</button> <br />
-									</td>
-								</tr>
-						  </table>
-						</td>
-					</tr> -->
 				</table>
 			</td>
 		</tr>
