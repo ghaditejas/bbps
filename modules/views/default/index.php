@@ -20,14 +20,15 @@
         
         <div class="row">
         
-            <div class="col-md-4 wallet-wrap">
+            <div class="col-xs-10 col-sm-5 col-md-4 wallet-wrap">
                 <div class="wallet">
                     <div class="row">
-                        <div class="col-sm-8">
+                        <div class="col-xs-8">
                             Wallet balance: <span class="amount-tx" id="wallet_amount">Rs. <?php echo $wallet_balance;?></span>
                         </div>
                         <div class="col-sm-4">
-                            <a class="btn btn-success" href="javascript:walletTopUp()">Add Topup</a>
+                            <!-- <a class="btn btn-success" href="javascript:walletTopUp()">Add Topup</a> -->
+                            <a href="#topup" class="btn btn-success" id="add_topup" data-toggle="modal" data-target="#topup" >Add Topup</a>
                         </div>
                     </div> 
                     <div class="row">
@@ -144,6 +145,37 @@
         
     </div>
 </div>
+<div class="modal fade" id="topup" tabindex="-1" role="dialog" aria-labelledby="">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Wallet Topup</h4>
+      </div>
+      <div class="modal-body">
+		<div class="tableboxpopup">
+        <div class="row">
+        <form class="form" action="/partnerpay/web/bbps/default/pay" id="wallet_topup" method="post">
+            <div class="col-xs-6">                            
+                <div class="form-group">
+                <input type="text" class="form-control" id="amount" name="invoice_amount" placeholder="Enter Topup Amount" value="">
+                    <input type="hidden" class="form-control" id="customvar" name="customvar" value="<?php echo $_SERVER['REQUEST_URI'];?>">
+                    <div class="help-block"></div>
+                </div>
+            </div>
+            <div class="col-xs-4">
+                <div class="form-group">                    
+                <input type="submit" class="btn btn-primary lg-btn" value="Submit" name="submitButton">
+                </div>
+            </div>
+        </form>
+        </div>
+		</div>
+		
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 function setUtility(id,name){
     $("#utility_name").val(id);
@@ -214,7 +246,6 @@ $(document).on('change','#bulk_upload',function(){
 
 $(document).on('change','.single',function(){
     $('.single').each(function(){
-        console.log($(this).val());
         if($(this).val()!=''){
             $('#bulk_upload').attr('disabled','true');  
             return false;
@@ -249,4 +280,8 @@ function walletTopUp(){
       }
    });
 }
+
+$(document).on('click','#add_topup',function(){
+    $('#amount').val('');
+})
 </script>

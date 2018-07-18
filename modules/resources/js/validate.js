@@ -108,6 +108,27 @@ $(document).ready(function () {
         }
     });
 
+    $("#wallet_topup").validate({
+        rules: {
+            invoice_amount: {
+                required : true,
+                number : true,
+                range : [1,500],
+            }
+        },
+        messages: {
+            invoice_amount: {
+                required : "Topup amount is Required",
+                number : "Invalid Topup amount",
+                range : "Topup Amount out of range",
+
+            }
+        },
+        submitHandler: function (form) {
+            form.submit();
+        }
+    });
+
     $("#payment").validate({
         rules: {
             merchant: {
@@ -173,4 +194,5 @@ $(document).ready(function () {
             
         }
     });
+
 });

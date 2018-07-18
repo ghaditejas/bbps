@@ -451,20 +451,24 @@ class DefaultController extends HController
         $chk = new Checksum();
         $privatekey =$chk->encrypt($config_data[0]['AIRPAY_USERNAME'].":|:".$config_data[0]['AIRPAY_PASSWORD'], $config_data[0]['AIRPAY_SECRET_KEY']);
         $buyerEmail = trim($data['EMAIL']);
-        $buyerPhone = trim("9869478152");
+        $buyerPhone = trim( $data['MOBILE']);
         $buyerFirstName = trim($data['FIRST_NAME']);
         $buyerLastName = trim($data['LAST_NAME']);
         $amount = trim(Yii::$app->request->post('invoice_amount'));
-        $orderid = trim(Yii::$app->request->post('invoice_no'));
+        if(Yii::$app->request->post('invoice_no')!=""){
+          $orderid = trim(Yii::$app->request->post('invoice_no'));
+        }else{
+          $orderid = trim(rand());
+        }
         $alldata   = $buyerEmail.$buyerFirstName.$buyerLastName.$amount.$orderid;
         $checksum = $chk->calculateChecksum($alldata.date('Y-m-d'),$privatekey);
         
-        return $this->render('airpay_payment',array('payment_data'=>Yii::$app->request->post(),"key"=>$privatekey,"checksum"=>$checksum,"mechant_id"=>$config_data[0]['AIRPAY_MERCHANT_ID'],"token"=>$data['WALLET_TOKEN']));
+        return $this->render('airpay_payment',array('payment_data'=>Yii::$app->request->post(),"key"=>$privatekey,"checksum"=>$checksum,"mechant_id"=>$config_data[0]['AIRPAY_MERCHANT_ID'],"token"=>$data['WALLET_TOKEN'],'orderid'=>$orderid));
       }
       
       public function actionPaymentresponse(){
-        print_r($_POST);
-        exit;
+      // print_r($_POST);
+      //   exit;
         $model = new TblTranscationDetails();
         $model->INVOICE_ID = $_POST['TRANSACTIONID'];
         $model->AIRPAY_ID = $_POST['APTRANSACTIONID'];
@@ -479,7 +483,7 @@ class DefaultController extends HController
         $model->save();
         if($_POST['TRANSACTIONPAYMENTSTATUS']=='SUCCESS'){
           if(isset($_POST['WALLETBALANCE'])){
-            $this->redirect('/partnerpay/web/bbps/default/biller');
+            $this->redirect($_POST['CUSTOMVAR']);
           } else{
             $connection = Yii::$app->db;
             $invoice = $connection
@@ -888,6 +892,10 @@ class DefaultController extends HController
               $url="https://devel-payments.airpayme.com/wallet/api/walletHistory.php";
               $wallet_data_response = $this->api_call($url,$api_data,1);
               return $this->render('wallet_history_listing',array('wallet_history'=>$wallet_data_response['TRANSACTION']['WALLETTXNS']['WALLETTXN']));    
+            }
+
+            public function actionWallet_topup(){
+
             }
           }
           

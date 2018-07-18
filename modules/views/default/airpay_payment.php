@@ -16,7 +16,7 @@
 			    <form action="https://devel-payments.airpayme.com/pay/index.php" method="post" id="airpay_form">
                     <input type="hidden" name="privatekey" value="<?php echo $key; ?>">
                     <input type="hidden" name="mercid" value="<?php echo $mechant_id; ?>">
-				    <input type="hidden" name="orderid" value="<?php echo $payment_data['invoice_no']; ?>">
+				    <input type="hidden" name="orderid" value="<?php echo $orderid; ?>">
                     <input type="hidden" name="amount" value="<?php echo $payment_data['invoice_amount']; ?>">
                     <input type="hidden" name="buyerEmail" value="<?php echo $data['EMAIL']; ?>">
                     <input type="hidden" name="buyerPhone" value=<?php echo $data['MOBILE']; ?>>
@@ -29,6 +29,11 @@
                     <?php if($payment_data['payment_mode'] == "ppc") {?>
                         <input type="hidden" name="wallet" value= "0">	
                         <input type="hidden" name="token" value= "<?php echo $token; ?>">
+                    <?php } ?>
+                    <?php if(isset($payment_data['customvar'])) {?>
+                        <input type="hidden" name="wallet" value= "1">	
+                        <input type="hidden" name="token" value= "<?php echo $token; ?>">
+                        <input type="hidden" name="customvar" value="<?php echo $payment_data['customvar']?>">
                     <?php } ?>
                 </form>
 		    </td>

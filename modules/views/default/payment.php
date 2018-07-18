@@ -108,7 +108,8 @@
 			</div>
 
 			<div class="col-sm-6 btngroup">
-				<button type="button" id="top_up" onClick="walletTopUp()" class="btn btn-primary hidden">Top up</button>
+				<!-- <button type="button" id="top_up" onClick="walletTopUp()" class="btn btn-primary hidden">Top up</button> -->
+				<a href="#topup" id="top_up" class="btn btn-primary hidden" data-toggle="modal" data-target="#topup" >Topup</a>
 				<button type="submit" id="pay" class="btn btn-primary">Pay</button>
 				<a href="/partnerpay/web/bbps/default/listing"><button type="button" class="btn btn-primary">Cancel</button></a>
 			</div>
@@ -126,6 +127,38 @@
 
 	</div>
 	</div><!--/close .indexpage-->
+</div>
+
+<div class="modal fade" id="topup" tabindex="-1" role="dialog" aria-labelledby="">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Wallet Topup</h4>
+      </div>
+      <div class="modal-body">
+		<div class="tableboxpopup">
+        <div class="row">
+        <form class="form" action="/partnerpay/web/bbps/default/pay" id="wallet_topup" method="post">
+            <div class="col-xs-6">                            
+                <div class="form-group">
+                <input type="text" class="form-control" id="amount" name="invoice_amount" placeholder="Enter Topup Amount" value="">
+                    <input type="hidden" class="form-control" id="customvar" name="customvar" value="<?php echo $_SERVER['REQUEST_URI'];?>">
+                    <div class="help-block"></div>
+                </div>
+            </div>
+            <div class="col-xs-4">
+                <div class="form-group">                    
+                <input type="submit" class="btn btn-primary lg-btn" value="Submit" name="submitButton">
+                </div>
+            </div>
+        </form>
+        </div>
+		</div>
+		
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="modal fade" id="listing" tabindex="-1" role="dialog" aria-labelledby="listingLabel">
@@ -313,7 +346,8 @@ function applyCharge(){
 }
 
  function remove_mobile(mobile_no,invoice_id){
-    var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
+	var csrf_token = "<?php echo Yii::$app->request->getCsrfToken()?>";
+	var wallet = "<?php echo $wallet_balance;?>";
     $.ajax({
 					type: "POST",
       				url: "/partnerpay/web/bbps/default/deletemobile",
@@ -343,7 +377,10 @@ function applyCharge(){
 								if($('#account_no_bill tbody tr').length == 1){
 										$(".bbox").empty();
 								}
-
+								if(tot_amt<=wallet){
+									$('#pay').removeClass('hidden');
+									$('#top_up').addClass('hidden');
+								}
                             }
 	  					}
             		 });
@@ -366,4 +403,8 @@ function applyCharge(){
       }
    });
 	}
+
+	$(document).on('click','#top_up',function(){
+    	$('#amount').val('');
+	})
 </script>

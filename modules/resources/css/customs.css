@@ -331,7 +331,7 @@ table .status a:hover{text-decoration:none;}
 .opcwrap{ position; relative;}
 .thlist{ list-style-type:none; margin:0 -10px; padding:0;}
 .thlist:after{content:''; clear:both; height:0; display:block;}
-.thlist li{ list-style-type:none; margin:0; padding:0 10px;float: left;position: relative;min-height: 1px; width:25%; max-width:145px;}
+.thlist li{ list-style-type:none; margin:0; padding:0 10px;float: left;position: relative;min-height: 1px; width:25%; max-width:140px;}
 .opcbox{border:1px solid #cccccc;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px; display:block; overflow:hidden; padding:0; margin:0 auto 30px; color:#333; text-align:center;}
 .opcbox:hover{ background-color:#ebf3fb;border-color:#a7d1ea;}
 .opcbox a{ display: block; padding:15px 0 0 0;min-height:110px; }
@@ -550,6 +550,7 @@ table.dataTable {
     text-decoration: underline;
 
 }
+
 @media(min-width:768px) {
 	.navbar-nav > li > .dropdown-menu:before{ content:''; display:block;/*width:13px;*/height:7px; margin-top:-7px; margin-right:-96px; background:url("../images/dropdown-menu.png") bottom center no-repeat; }
 	.download-wrap {
@@ -592,7 +593,7 @@ table.dataTable {
 	.navbar-default .navbar-nav .subtext{ text-align:left;}
 	.table-responsive > .table-bordered {border:1px solid #ddd;}
 	
-	.wallet-wrap{ float:none;}
+	.wallet-wrap{ float:none; padding: 0 0 0 15px;}
 	.wallet{ margin:0 auto 30px;}
 }
 
@@ -615,7 +616,17 @@ table.dataTable {
 	.onoffswitch-checkbox2:checked + .onoffswitch-label2 .onoffswitch-switch2:after{ font-size:13px; top:5px;} */
 	
 	.thlist li{width: 48%; max-width:165px;}
-	
+	#topup .col-xs-8,#topup .col-xs-4{
+        width: 100%;
+    }
+    .viewHist{
+        top:10px;
+    }
+
+    .wallet .btn {
+        float: left;
+        margin: 10px 0px;
+    }
 	
 }
 @media only screen and (max-width: 321px) {

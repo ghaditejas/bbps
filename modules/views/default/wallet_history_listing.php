@@ -9,7 +9,7 @@
 <div class="page-header">
 		<h4>Wallet History</h4>
 		<div class="fieldstx">
-				<a class="btn btn-default" href="/partnerpay/web/bbps/default/">Back</a>
+				<a class="btn btn-default" href="/partnerpay/web/bbps/default/biller">Back</a>
 		</div>
 </div>
 <div class="removed-table" id="removed">	
