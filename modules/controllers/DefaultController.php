@@ -111,11 +111,11 @@ class DefaultController extends HController
           fgetcsv($new_handle);
           while (($fileop = fgetcsv($new_handle, 1024, ",")) !== false) 
           {
-            if(!preg_match('#^[A-Z]+$#i',$fileop[0]) || !preg_match('#^[A-Z]+$#i',$fileop[1]) || !filter_var($fileop[2], FILTER_VALIDATE_EMAIL) || $this->check_dynamic_validation($fileop)){
+            if(!preg_match('#^[A-Z]+$#i',$fileop[0]) || !preg_match('#^[A-Z]+$#i',$fileop[1]) || !filter_var($fileop[2], FILTER_VALIDATE_EMAIL) || $this->check_dynamic_validation($fileop, Yii::$app->request->post('utility_name'))){
               $error = $fileop;
               $error[] = "Could not Import Details Has Validation Error";
               $upload_error[] = $error;
-            }else if($this->check_account_id($fileop[3])){
+            }else if($this->check_account_id($fileop[4])){
               $error = $fileop;
               $error[] = "Account id already exist";
               $upload_error[] = $error;
@@ -124,9 +124,17 @@ class DefaultController extends HController
               $data['fname']=$fileop[0];
               $data['lname']=$fileop[1];
               $data['email']=$fileop[2];
-              $data['account_id']= $fileop[3];
+              if(Yii::$app->request->post('utility_name') != "17"){
+                $data['mobile_number']=$fileop[3];
+                $data['account_id']= $fileop[4];
+                $num = 4;
+              } else {
+                $data['mobile_number']=$fileop[3];
+                $data['account_id']= $fileop[3];
+                $num = 3;
+              }
               for($i=1;$i<sizeof($fields);$i++){
-                $fields_data[$fields[$i]]=$fileop[$i+3];
+                $fields_data[$fields[$i]]=$fileop[$i+$num];
               }
               $data['details'] = json_encode($fields_data);
               $data['billerid'] = Yii::$app->request->post('providers');
@@ -154,6 +162,11 @@ class DefaultController extends HController
       $data=array();
       //$invoice_id = $this->invoice_create();
       $data['account_id']=Yii::$app->request->post(str_replace(' ','_',$fields[0]));
+      if(Yii::$app->request->post('utility_name') != '17' ){
+        $data['mobile_number'] = Yii::$app->request->post('mobile_number');
+      }else{
+        $data['mobile_number'] = $data['account_id'];
+      }
       if($this->check_account_id($data['account_id'])){
         Yii::$app->getSession()->setFlash('error', "Account Id already exist");
         return $this->render('index',array('utilities'=>TblUtility::find()->all()));
@@ -203,10 +216,18 @@ class DefaultController extends HController
     }
   }
   
-  public function check_dynamic_validation($fileop){
+  public function check_dynamic_validation($fileop,$utility){
+    if($utility != '17'){
+      $num = 4;
+      if(!preg_match('#^[0-9]{10}+$#',$fileop[3])){
+        return true;
+      }
+    } else {
+      $num = 3;
+    }
     $validation = json_decode($this->actionGet_fields(Yii::$app->request->post('providers'),'validation'),true);
     for ($i=0;$i<sizeof($validation);$i++){
-      if(preg_match('/'.$validation[$i].'/', $fileop[$i+3])){
+      if(preg_match('/'.$validation[$i].'/', $fileop[$i+$num])){
         continue;
       } else {
         return true;
@@ -325,6 +346,7 @@ class DefaultController extends HController
         $model->FNAME = $data['fname'];
         $model->LNAME = $data['lname'];
         $model->EMAIL = $data['email'];
+        $model->MOBILE_NUMBER = $data['mobile_number'];
         $user_data=Yii::$app->user->identity;
         $model->USER_ID= $user_data['USER_ID'];
         // $model->INVOICE_ID=$invoice_id;
@@ -467,8 +489,6 @@ class DefaultController extends HController
       }
       
       public function actionPaymentresponse(){
-      // print_r($_POST);
-      //   exit;
         $model = new TblTranscationDetails();
         $model->INVOICE_ID = $_POST['TRANSACTIONID'];
         $model->AIRPAY_ID = $_POST['APTRANSACTIONID'];
@@ -483,7 +503,8 @@ class DefaultController extends HController
         $model->save();
         if($_POST['TRANSACTIONPAYMENTSTATUS']=='SUCCESS'){
           if(isset($_POST['WALLETBALANCE'])){
-            $this->redirect($_POST['CUSTOMVAR']);
+            $redirect_url = explode('||',$_POST['CUSTOMVAR']);
+            $this->redirect($redirect_url[1]);
           } else{
             $connection = Yii::$app->db;
             $invoice = $connection
@@ -563,7 +584,7 @@ class DefaultController extends HController
         }
       }  
       
-      public function notification($invoice_id){
+      public function actionNotification($invoice_id = ""){
         $connection = Yii::$app->db;
         $checkresponse = $connection
         ->createCommand("SELECT Count(b.PROVIDER_BILL_DETAILS_ID) as bill_recieved, MOBILE from  tbl_provider_bill_details as b INNER JOIN tbl_user_master as u on u.USER_ID = b.USER_ID  where INVOICE_ID=:invoice_id AND RESPONSE_NOT_RECIEVED=0");
@@ -584,8 +605,21 @@ class DefaultController extends HController
           curl_close($ch);
           return $response;
         } else {
-          $msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
-          return $msg;
+          //$msg="RECIEVED BILL DETAILS OF ".$checkresponse_data[0]['bill_recieved']." MOBILE NUMBERS";
+          $signature = 'airpay';
+          $msg = 'Thank you for payment of Rs. 210.82 against BEST Mumbai, Consumer No 6262850777, Txn Ref ID ARP40000022 on 18-07-2018 via Wallet';
+
+          $sms_data = \Yii::$app->params['sms']['data'];
+          $sms_data = str_replace('{{{phone_number}}}', '9768832467', $sms_data);
+          $sms_data = str_replace('{{{message}}}', urlencode($msg) , $sms_data);
+          $sms_data = str_replace('{{{signature}}}', ($signature), $sms_data);
+
+          $ch = curl_init(\Yii::$app->params['sms']['url'] . $sms_data);
+          curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+          $response = curl_exec($ch);
+          curl_close($ch);
+          echo $response;
+          //return $msg;
         }
       } 
       
@@ -706,11 +740,16 @@ class DefaultController extends HController
           }
         }
         
-        public function actionDownload_csv_file($provider,$errors=""){
+        public function actionDownload_csv_file($provider,$utility,$errors=""){
           $fields[0]='First Name';
           $fields[1]='Last Name';
           $fields[2]='Email';
-          $i = 3;
+          if($utility != "17"){
+            $fields[3]='Mobile Number';
+            $i = 4;
+          }else{
+            $i=3;
+          }
           $field = json_decode($this->actionGet_fields($provider),true);
           foreach($field as $value){
             $fields[$i] = $value;
@@ -894,8 +933,8 @@ class DefaultController extends HController
               return $this->render('wallet_history_listing',array('wallet_history'=>$wallet_data_response['TRANSACTION']['WALLETTXNS']['WALLETTXN']));    
             }
 
-            public function actionWallet_topup(){
-
+            public function actionFaq(){
+              return $this->render('faq');    
             }
           }
           

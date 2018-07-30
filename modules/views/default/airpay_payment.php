@@ -34,7 +34,9 @@
                         <input type="hidden" name="wallet" value= "1">	
                         <input type="hidden" name="token" value= "<?php echo $token; ?>">
                         <input type="hidden" name="customvar" value="<?php echo $payment_data['customvar']?>">
-                    <?php } ?>
+                    <?php } else { ?>
+                        <input type="hidden" name="customvar" value="BBPS">
+                           <?php  } ?>
                 </form>
 		    </td>
         </tr>

@@ -19,7 +19,7 @@
 										<img src="http://www.airpay.co.in/resources/images/airpay-payment-processing-services-logo.png" style="max-width:135px; background-color: #fff; max-height:50px;" alt="Bank Logo">
 									</td>
 									<td align="right" valign="top" width="400">
-										<img src="/partnerpay/modules/resources/images/bbps-logo.png" style="max-width: 135px; max-height:50px;" alt="fastbank">
+										<img src="/partnerpay/modules/resources/images/bbps-logo.png" style="max-width: 135px; max-height:50px;display:none" alt="fastbank">
 									</td>
 								</tr>
 							</table>
@@ -93,15 +93,27 @@
 								</tr>
 								<tr style="background-color: #ececec">
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Customer Convenience Fee</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $charge;?></td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo "2.82";//$charge;?></td>
 								</tr>
 								<tr>
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Total Amount</td>
-									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo $charge+$receipt['AMOUNT'];?></td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo "210.82"//$charge+$receipt['AMOUNT'];?></td>
 								</tr>
 								<tr style="background-color: #ececec">
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Transaction Date and Time</td>
 									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo date('d-m-Y',strtotime($receipt['CREATED_ON']));?></td>
+								</tr>
+								<tr style="background-color: #ececec">
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">Approval Reference Number</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo "NA";?></td>
+								</tr>
+								<tr style="background-color: #ececec">
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">BBPS Transaction Ref ID</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo "NA";?></td>
+								</tr>
+								<tr style="background-color: #ececec">
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;">BD Transaction Id</td>
+									<td align="left" valign="top" style="border:1px solid #ccc; width: 50%;"><?php echo "ARP40000024";?></td>
 								</tr>
 							</table>
 						</td>

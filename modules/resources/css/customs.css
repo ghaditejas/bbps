@@ -66,6 +66,8 @@ p { padding:0;margin:0 0 20px 0;line-height: 1.5;}
 .logoimg{ display:inline-block; margin:0; padding:0;}
 .banklogo img{ border-left:2px solid #ccc; margin-left:5px;}
 .indexpage h3{ padding:20px 10px 10px; text-transform: uppercase;}
+.merlogo-head{ margin-bottom:00px; display: block;}
+.merlogo-head img{max-height:56px; max-width:300px;}
 
 
 .bott-logo{ width:100%;margin:20px auto 0; padding:10px 0; text-align:right; border-top:1px solid #ccc;}
@@ -340,7 +342,7 @@ table .status a:hover{text-decoration:none;}
 .i-gas{ background-image:url('../images/i-gas.png');}
 .i-dth{ background-image:url('../images/i-dth.png');}
 .i-data{ background-image:url('../images/i-data.png');}
-.i-elc{ background-image:url('../images/i-elc.png');}
+.i-elc,.i-ele{ background-image:url('../images/i-elc.png');}
 .opcbox h3.thh{color:#0f68a8; font-size:18px; line-height:20px;padding:15px 15px 0;word-break: break-word; }
 
 .opcrow{ position: relative; z-index:5; border:0px solid #cccccc;-webkit-border-radius:5px;-moz-border-radius:5px;border-radius:5px; display:none;}
@@ -550,6 +552,15 @@ table.dataTable {
     text-decoration: underline;
 
 }
+
+.faq-group .panel-default{border:0px dashed #ddd;}
+.faq-group .panel-default > .panel-heading{ background-color:rgba(255,255,255,0); border:0px dashed #ddd; border-bottom:1px dashed #ddd; padding:0;position:relative;}
+.faq-group .panel-default > .panel-heading h4{ padding:0;}
+.faq-group .panel-default > .panel-heading a{ padding:15px 0 15px 35px;position:relative; min-height:40px; display: block;}
+.faq-group .panel-default > .panel-heading a:before{ content: "\f068";font-family: 'FontAwesome'; text-align: center; line-height:25px; display:block; width:25px; height:25px; background-color:#ccc;-webkit-border-radius:100%;border-radius:100%;-moz-border-radius:100%; position: absolute; top:15px; left:0; }
+.faq-group .panel-default > .panel-heading a.collapsed:before{ content: "\f067"; }
+.faq-group .panel-heading + .panel-collapse > .panel-body, .faq-group .panel-heading + .panel-collapse > .list-group{border:0px dashed #ddd; border-bottom:2px solid #ddd; padding:15px 0 15px 35px; margin-bottom:25px;}
+.panel-body p:last-child{ padding:0;}
 
 @media(min-width:768px) {
 	.navbar-nav > li > .dropdown-menu:before{ content:''; display:block;/*width:13px;*/height:7px; margin-top:-7px; margin-right:-96px; background:url("../images/dropdown-menu.png") bottom center no-repeat; }

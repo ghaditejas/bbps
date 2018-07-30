@@ -1,6 +1,9 @@
 <link rel="stylesheet" href="/partnerpay/modules/resources/css/customs.css" type="text/css">
 <div class="wrapper">
     <div class="container">
+        <div class="merlogo-head text-center">
+                <img src="/partnerpay/modules/resources/images/bbps-logo.png" alt="bbpslogo">
+            </div>
         <div>
             <h2 style="text-align: center;">Thank you your data has been uploaded</h2>
             <div style="text-align: center;">

@@ -1,6 +1,6 @@
 <link rel="stylesheet" href="/partnerpay/modules/resources/css/customs.css" type="text/css">
 
-<div class="wrapper">
+<div class="wrapper00">
     <div class="container">
     <?php if(Yii::$app->session->hasFlash('error')){?>
         <div class="alert alert-error alert-dismissable">
@@ -9,6 +9,9 @@
         </div>
     <?php }?>
         <div class="page-header">
+            <div class="merlogo-head">
+                <img src="/partnerpay/modules/resources/images/bbps-logo.png" alt="bbpslogo">
+            </div>
             <h4>Bharat Bill Payment System</h4>
             <div class="fieldstx closetab">
                     <a class="btn btn-default" href="javascript:void(0)">Back</a>
@@ -113,6 +116,9 @@
                                         <div class="help-block"></div>
                                     </div>
                                 </div>
+                                <div class="col-sm-12 col-md-8 mobile_number">                            
+                                    
+                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-sm-12 col-md-8">
@@ -159,7 +165,7 @@
             <div class="col-xs-6">                            
                 <div class="form-group">
                 <input type="text" class="form-control" id="amount" name="invoice_amount" placeholder="Enter Topup Amount" value="">
-                    <input type="hidden" class="form-control" id="customvar" name="customvar" value="<?php echo $_SERVER['REQUEST_URI'];?>">
+                    <input type="hidden" class="form-control" id="customvar" name="customvar" value="<?php echo "BBPS||".$_SERVER['REQUEST_URI'];?>">
                     <div class="help-block"></div>
                 </div>
             </div>
@@ -179,6 +185,12 @@
 <script>
 function setUtility(id,name){
     $("#utility_name").val(id);
+    if($("#utility_name").val() != '17'){
+        $('.mobile_number').empty();
+        $('.mobile_number').html('<div class="form-group"><input type="text" class="form-control single" id="mobile_number" name="mobile_number" placeholder="Enter your Mobile Number"><div class="help-block"></div></div>');
+    } else {
+        $('.mobile_number').empty();
+    }
      $.ajax({
       url: "/partnerpay/web/bbps/default/providers",  
       data: {utility_id: id},
@@ -201,6 +213,7 @@ function setUtility(id,name){
 
 function getFields(){
     var provider = $("input[name=providers]:checked").val();
+    var utility = $("#utility_name").val();
     if(provider){
      $.ajax({
       url: "/partnerpay/web/bbps/default/get_fields",  
@@ -223,7 +236,7 @@ function getFields(){
                     }
                 });
             });
-             $('#download_csv').empty().append("<a href='/partnerpay/web/bbps/default/download_csv_file?provider="+provider+"' target='_blank' >Download Sample Format</a>")
+             $('#download_csv').empty().append("<a href='/partnerpay/web/bbps/default/download_csv_file?provider="+provider+"&utility="+utility+"' target='_blank' >Download Sample Format</a>")
              $('#bulk_upload').val('');
              $('#bulk_upload').removeAttr('disabled');
              $('.file-input-name').html('');

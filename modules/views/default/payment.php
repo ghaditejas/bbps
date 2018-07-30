@@ -1,13 +1,16 @@
 <link rel="stylesheet" href="/partnerpay/modules/resources/css/customs.css" type="text/css">
-<div class="index">
-	<div class="indexpage">
+<div class="index0">
+	<div class="indexpage0">
 	<div class="container">
 		<div class="logo" style="padding: 25px;">
-				<div class="logoimg partnerpay"><img alt="Partnerpay" src="/partnerpay/modules/resources/images/partnerpay-logo.png"/></div>
-				<div class="logoimg banklogo"><img alt="mastercard" src="/partnerpay/modules/resources/images/mastercard.png"/></div>
+			<div class="merlogo-head text-center">
+                <img src="/partnerpay/modules/resources/images/bbps-logo.png" alt="bbpslogo">
+            </div>
+				<!-- <div class="logoimg partnerpay"><img alt="Partnerpay" src="/partnerpay/modules/resources/images/bbps-logo.png"/></div> -->
+				<!-- <div class="logoimg banklogo"><img alt="mastercard" src="/partnerpay/modules/resources/images/mastercard.png"/></div> -->
 			
 		</div>
-		<h3><?=$provider;?></h3>
+		<h3 class="text-center"><?=$provider;?></h3>
 		
 		<div class="row">
 			<div class="col-md-12"> <div class="invoice-head"><b>Invoice No :</b> <?=$invoice_data[0]['INVOICE_ID'];?></div></div>
@@ -143,7 +146,7 @@
             <div class="col-xs-6">                            
                 <div class="form-group">
                 <input type="text" class="form-control" id="amount" name="invoice_amount" placeholder="Enter Topup Amount" value="">
-                    <input type="hidden" class="form-control" id="customvar" name="customvar" value="<?php echo $_SERVER['REQUEST_URI'];?>">
+                    <input type="hidden" class="form-control" id="customvar" name="customvar" value="<?php echo "BBPS||".$_SERVER['REQUEST_URI'];?>">
                     <div class="help-block"></div>
                 </div>
             </div>

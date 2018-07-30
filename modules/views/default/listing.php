@@ -7,6 +7,9 @@
 <div class="container">
 	
 	<div class="page-header">
+			<div class="merlogo-head">
+                <img src="/partnerpay/modules/resources/images/bbps-logo.png" alt="bbpslogo">
+            </div>
 		<h4>Invoice Listing</h4>
 		<div class="fieldstx">
 				<a class="btn btn-default" href="/partnerpay/web/bbps/default/">Back</a>
