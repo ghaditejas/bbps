@@ -16,9 +16,10 @@
     $(document).ready(function(){
         var provider_id = "<?php echo $provider; ?>";
         var upload_error = '<?php echo $upload_error; ?>';
+        var utility = '<?php echo $utility; ?>';
         console.log(upload_error);
         if(provider_id && upload_error != 'null'){
-            window.open('/partnerpay/web/bbps/default/download_csv_file?provider='+provider_id+'&errors='+upload_error);
+            window.open('/partnerpay/web/bbps/default/download_csv_file?provider='+provider_id+'&utility='+utility+'&errors='+upload_error);
           }
     });
     </script>

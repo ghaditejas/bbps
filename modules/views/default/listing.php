@@ -364,7 +364,7 @@ function getRecords(){
 						'<td><input type="checkbox" name="checkbox_bill[]" class="checkbox checkbox-inline" value="'+value.PROVIDER_BILL_DETAILS_ID+'" class="checkbox-inline"></td>'+
 						'<td>'+value.ACCOUNT_NO+'</td>'+
 						'<td>'+value.DUE_DATE+'</td>'+
-						'<td class="text-right">'+value.AMOUNT+'</td>'+
+						'<td>'+value.AMOUNT+'</td>'+
 						'<td><a href="javascript:void(0)" onClick="pay()" class="btn btn-primary">Pay Now</a></td></tr>';
                     $('#removed_data tbody').append(remove_data);
              	});
@@ -451,7 +451,7 @@ function allInvoice(){
 				  }
 				  $('#all_invoice tbody').empty();
 				$.each(data, function (key, value) {
-                    var all_invoice_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.provider_name+'</td><td>'+value.utility_name+'</td><td class="text-right" id="amount_'+value.INVOICE_ID+'">'+value.invoice_amount+'</td><td class="action"><div class="bbox"><a href="#listing" style="margin-left:25px" data-toggle="modal" onClick="getDetails('+value.INVOICE_ID+')" class="btn btn-primary" >DETAILS</a></div></td></tr>';
+                    var all_invoice_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.provider_name+'</td><td>'+value.utility_name+'</td><td id="amount_'+value.INVOICE_ID+'">'+value.invoice_amount+'</td><td class="action"><div class="bbox"><a href="#listing" style="margin-left:25px" data-toggle="modal" onClick="getDetails('+value.INVOICE_ID+')" class="btn btn-primary" >DETAILS</a></div></td></tr>';
                     $('#all_invoice tbody').append(all_invoice_data);
              	});
 				 $("#all_invoice").DataTable({
@@ -488,7 +488,7 @@ function unpaidInvoice(){
 				  }
 				  $('#unpaid_invoice tbody').empty();
 				$.each(data, function (key, value) {
-                    var all_invoice_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.INVOICE_ID+'</td><td>'+value.provider_name+'</td><td>'+value.utility_name+'</td><td class="text-right" id="amount_'+value.INVOICE_ID+'">'+value.invoice_amount+'</td><td><a href="/partnerpay/web/bbps/default/payment?invoice_id='+value.INVOICE_ID+'" class="btn btn-primary">Pay Now</a></td></tr></tr>';
+                    var all_invoice_data='<tr><td class="idnum">'+(parseInt(key)+1)+'</td><td>'+value.INVOICE_ID+'</td><td>'+value.provider_name+'</td><td>'+value.utility_name+'</td><td id="amount_'+value.INVOICE_ID+'">'+value.invoice_amount+'</td><td><a href="/partnerpay/web/bbps/default/payment?invoice_id='+value.INVOICE_ID+'" class="btn btn-primary">Pay Now</a></td></tr></tr>';
                     $('#unpaid_invoice tbody').append(all_invoice_data);
              	});
 				 $("#unpaid_invoice").DataTable({

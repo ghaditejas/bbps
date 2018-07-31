@@ -210,9 +210,9 @@ class DefaultController extends HController
     $log_data="ADD BILLER API RESPONSE : ".json_encode($response);
     $this->writeLog("Log_Data",$log_data);
     if($response->STATUS=="200"){
-      return $this->render($template,array('provider'=>Yii::$app->request->post('providers'),'upload_error'=>json_encode($upload_error)));
+      return $this->render($template,array('provider'=>Yii::$app->request->post('providers'),'utility'=>Yii::$app->request->post('utility_name'),'upload_error'=>json_encode($upload_error)));
     } else {
-      return $this->render($template,array('provider'=>Yii::$app->request->post('providers'),'upload_error'=>json_encode($upload_error)));
+      return $this->render($template,array('provider'=>Yii::$app->request->post('providers'),'utility'=>Yii::$app->request->post('utility_name'),'upload_error'=>json_encode($upload_error)));
     }
   }
   
@@ -429,7 +429,7 @@ class DefaultController extends HController
         $connection = Yii::$app->db;
         $invoice_mobile_delete = $connection->createCommand()
         ->update('tbl_provider_bill_details', ['REMOVED' => 'y','INVOICE_ID'=> " "], 'INVOICE_ID='.Yii::$app->request->post('invoice_id').' AND ACCOUNT_NO='.Yii::$app->request->post('mobile_no'))->execute();
-        echo $invoice_data;
+        //echo $invoice_data;
         if($invoice_mobile_delete){
           $invoice = $connection
           ->createCommand("Select b.AMOUNT,b.RESPONSE_NOT_RECIEVED,b.PROVIDER_ID,p.provider_name,b.INVOICE_ID,b.DUE_DATE,b.ACCOUNT_NO from tbl_provider_bill_details as b JOIN tbl_provider as p on b.PROVIDER_ID=p.provider_id where b.INVOICE_ID=:invoice_id AND b.REMOVED='n'");
