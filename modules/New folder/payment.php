@@ -1,11 +1,11 @@
 
 <?php
     include('checksum.php');
-    $username = '5610027';
-    $password = 'A3IEpPKn';
-    $secret = '5q9M2W1uKe67B3Ab';
-    $mercid = '19378';
-    $alldata = $data['email'] . $data['fname'] . $data['lname'] . $data['total_amount'] . "1234";
+    $username = '7595201';
+    $password = 'MgUFY5em';
+    $secret = '6KeetYvu2TSdsegD';
+    $mercid = '21720';
+    $alldata = $data['email'] . $data['fname'] . $data['lname'] . $data['total_amount'] .$register_id;
     $privatekey = Checksum::encrypt($username . ":|:" . $password, $secret);
     $checksum = Checksum::calculateChecksum($alldata . date('Y-m-d'), $privatekey);
 ?>
@@ -25,7 +25,7 @@
 			    <form action="https://payments.airpay.co.in/pay/index.php" method="post" id="airpay_form">
                     <input type="hidden" name="privatekey" value="<?php echo $privatekey; ?>">
                     <input type="hidden" name="mercid" value="<?php echo $mercid; ?>">
-				    <input type="hidden" name="orderid" value="<?php echo '1234'; ?>">
+				    <input type="hidden" name="orderid" value="<?php echo $register_id; ?>">
                     <input type="hidden" name="amount" value="<?php echo $data['total_amount']; ?>">
                     <input type="hidden" name="buyerEmail" value="<?php echo $data['email']; ?>">
                     <input type="hidden" name="buyerPhone" value=<?php echo $data['mob_no']; ?>>
@@ -35,7 +35,7 @@
 		            <input type="hidden" name="isocurrency" value="INR">
                     <input type="hidden" name="checksum" value="<?php echo $checksum; ?>">
 				    <input type="hidden" name="chmod" value= "<?php echo $data['payoption'] ?>">	
-                    <input type="hidden" name="customvar" value="<?php echo $data['amount'] ?>">
+                    <input type="hidden" name="customvar" value="<?php echo "activity_automation|amount:".$data['amount'] ?>">
                 </form>
 		    </td>
         </tr>

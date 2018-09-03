@@ -13,8 +13,10 @@ include_once('footer.php');
 $error = array();
 function validate ($data){
     $error_list = array();
-    if(!(isset($data['gr_no']) && $data['gr_no']!='')){
+    if(isset($data['gr_no'])){
+        if($data['gr_no'] == ''){
         $error_list['gr_no'] = "Roll No. is required!";
+        }
     }
     if (!preg_match ('#^[A-Z]+$#i',$data['fname'])) {
         $error_list['fname'] = "First name must only contain letters!";
@@ -40,18 +42,27 @@ function validate ($data){
     if($data['payoption'] == ''){
         $error_list['payoption'] = "Payment mode is required!";
     }
+    if(isset($data['mealoption'])){
+        if( $data['mealoption'] == ""){
+            $error_list['mealoption'] = "Meal is required!";
+        }
+    }
     return $error_list;
 }
 
 if($_POST["submit"]){
     $error =validate($_POST);
     if(sizeof($error)==0){
-        $register_id = add_register_data($mysqli,$_POST,$config['school_details']['SCHOOL_ID']);
+        if(isset($_POST['mealoption'])){
+            $meal = $_POST['mealoption'];
+        }else{
+            $meal = "";
+        } 
+        $register_id = add_register_data($mysqli,$_POST,$config['school_details']['SCHOOL_ID'],$meal);
         if(sizeof($register_id)>0){
-            $activity_register_mapping = add_register_data_map($mysqli,$register_id);
+            $activity_register_mapping = add_register_data_map($mysqli,$_POST['activity_id'],$register_id);
             if($activity_register_mapping){
                 $data = $_POST;
-                $airpay_details = get_airpay_details($mysqli,$_POST['activity_type_id']);
                 $fail = 1;
                 include('templates/payment.php');
             } else {

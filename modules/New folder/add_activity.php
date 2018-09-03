@@ -59,6 +59,32 @@ while($row = $get_classes->fetch_assoc()){
                                     <div class="validationAlert text-error"><?php if(isset($error["end_date"])){echo $error['end_date'];} ?></div>
                                 </div>
                             </div>
+                            <div class="control-group">
+                                <label class="control-label">Show Meal Option</label>
+                                <label class="control-label" style="width: 60px;"><input type="radio" checked="checked" class="meal_show" name="meal_show" value="Y"> Yes</label>
+                                <label class="control-label" style="width: 60px;"><input type="radio" class="meal_show" name="meal_show" value="N"> No</label>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="">Email CC<font color="red">*</font></label>
+                                <div class="controls">
+                                    <input id="email_cc" name="email_cc" placeholder="Enter email cc" class="input-xlarge" type="text" data-required="true" value = "<?php if(isset($_POST['email_cc'])){echo $_POST['email_cc'];} else if(isset($activity_type_map['EMAIL_CC'])){echo $activity_type_map['EMAIL_CC'];} else {echo '';}?>">
+                                    <div class="validationAlert text-error"><?php if(isset($error["email_cc"])){echo $error['email_cc'];} ?></div>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="">Email Content<font color="red">*</font></label>
+                                <div class="controls">
+                                    <textarea id="email_content" name="email_content" class="ckeditor"><?php if(isset($_POST['email_content'])){echo $_POST['email_content'];} else if(isset($activity_type_map['EMAIL_CONTENT'])){echo $activity_type_map['EMAIL_CONTENT'];} else {echo '';}?></textarea>
+                                    <div class="validationAlert text-error"><?php if(isset($error["email_content"])){echo $error['email_content'];} ?></div>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="">SMS Content<font color="red">*</font></label>
+                                <div class="controls">
+                                    <textarea id="sms_content" name="sms_content" class="ckeditor"  data-required="true"><?php if(isset($_POST['sms_content'])){echo $_POST['sms_content'];} else if(isset($activity_type_map['SMS_CONTENT'])){echo $activity_type_map['SMS_CONTENT'];} else {echo '';}?></textarea>
+                                    <div class="validationAlert text-error"><?php if(isset($error["sms_content"])){echo $error['sms_content'];} ?></div>
+                                </div>
+                            </div>
                             <legend style="padding-left: 10px; width: auto;">Categories</legend>
                             <div class="control-group">
                                 <label class="control-label" for="textinput"> Classes <font
@@ -136,18 +162,13 @@ while($row = $get_classes->fetch_assoc()){
                             <legend style="padding-left: 10px; width: auto;">Payment Option</legend>
                             <div class="control-group">
                                 <label class="control-label">Is POS required</label>
-                                <label class="control-label" style="width: 60px;"><input type="checkbox" class="" name="" value="Y"> Yes</label>
+                                <label class="control-label" style="width: 60px;"><input type="checkbox" <?php if(isset($_POST['pos_req'])){echo "checked='checked'";}?> class="pos_req" id="pos_req" name="pos_req" value="1"> Yes</label>
                             </div>
-                            <div class="control-group">
-                                <label class="control-label" for="textinput">Select Payment Option<font color="red">*</font></label>
+                            <div class="control-group <?php if(isset($error['pos_unique_id'])){ echo ''; } else {echo 'hidden';}?>" id="pos_unique">
+                                <label class="control-label" for="">Unique POS Id<font color="red">*</font></label>
                                 <div class="controls">
-                                    <select name="payoption[]" class="jsMultipleSelect input-xlarge" multiple="multiple" data-required="true" data-placeholder="Select Options">
-                                       <option value = "1">CC</option>
-                                        <option value = "2">DC</option>
-                                        <option value = "3">Net Banking</option>
-                                        <option value = "4">POS</option>
-                                    </select>
-                                    <div class="validationAlert text-error"><?php if(isset($error["payoption"])){echo $error['payoption'];} ?></div>
+                                    <input id="activity" name="pos_unique_id" placeholder="Enter Unique POS Id" class="input-xlarge" type="text" data-required="true" value = "<?php if(isset($_POST['activity_name'][0])){echo $_POST['activity_name'][0];} else if(isset($activity_name['activity_name'][0])){echo $activity_name['activity_name'][0];} else {echo '';}?>">
+                                    <div class="validationAlert text-error"><?php if(isset($error['pos_unique_id'])){ echo $error['pos_unique_id'];}?></div>
                                 </div>
                             </div>
                             <div class="form-actions">
@@ -166,6 +187,7 @@ while($row = $get_classes->fetch_assoc()){
 
 <script src="resources/lib/bootstrap/js/bootstrap.js"></script>
 <script src="resources/js/jquery-ui.js"></script>
+<script src="resources/js/ckeditor/ckeditor.js"></script>
 
 <script type="text/javascript">
     $(function() {
@@ -223,6 +245,14 @@ while($row = $get_classes->fetch_assoc()){
         // $('form').parsley();
 
     }
+
+    $('#pos_req').click(function(){
+       if($('#pos_req').prop('checked')){
+           $('#pos_unique').removeClass('hidden');
+       }else{
+            $('#pos_unique').addClass('hidden');
+       }
+    })
 </script>
 
 </body>

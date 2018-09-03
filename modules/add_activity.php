@@ -24,8 +24,22 @@ function validate ($data){
     if($data['end_date']==""){
         $error_list['end_date'] = "End Date is required!";
     }
+    if($data['email_content']==""){
+        $error_list['email_content'] = "Email content is required!";
+    }
+    if($data['sms_content']==""){
+        $error_list['sms_content'] = "Sms Content is required!";
+    }
+    if($data['email_cc']==""){
+        $error_list['email_cc'] = "Email CC is required!";
+    }
     if(sizeof($data['payoption'])==0){
         $error_list['payoption'] = "Pay option is required!";
+    }
+    if(isset($data['pos_req'])){
+        if(! preg_match(('#^[0-9]+$#i'),$data['pos_unique_id'])){
+            $error_list['pos_unique_id'] = "Invalid POS Unique Id!";
+        }
     }
 
     $class = $_POST['selclass'];
@@ -60,6 +74,7 @@ function validate ($data){
 
 if($_POST["submit"]){
     $error =validate($_POST);
+    pr($error);
     if(sizeof($error)==0){
         $activity_type_id = add_activity_type($mysqli,$_POST['activity_title']);
         if($activity_type_id){

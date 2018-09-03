@@ -5,6 +5,7 @@ function get_activity_records($mysqli,$school_id,$offset,$search){
     }
     $query = "SELECT * FROM `tbl_rj_activity_school_mapping` as rm Join tbl_rj_activity as a on rm.ACTIVITY_TYPE_ID = a.ACTIVITY_TYPE_ID where rm.`SCHOOL_ID`= ".$school_id." AND rm.ACTIVITY_START_DATE LIKE '%".strtotime($filter['st_date'])."%' AND rm.ACTIVITY_END_DATE LIKE '%".strtotime($filter['ed_date'])."%' AND a.ACTIVITY_NAME LIKE '%".$filter['activity_name']."%' Group By a.ACTIVITY_NAME LIMIT ".$offset.", 2";
     // $query = "SELECT * FROM `tbl_rj_activity_school_mapping` as rm Join tbl_rj_activity as a on rm.ACTIVITY_TYPE_ID = a.ACTIVITY_TYPE_ID where rm.`SCHOOL_ID`= ".$school_id." Group By a.ACTIVITY_NAME LIMIT ".$offset.", 2";
+    // $query = "SELECT *,a.ACTIVITY_TYPE FROM `tbl_rj_activity_school_mapping` as rm Join tbl_rj_activity_types as a on rm.ACTIVITY_TYPE_ID = a.ACTIVITY_TYPE_ID where rm.`SCHOOL_ID`= ".$school_id." AND rm.ACTIVITY_START_DATE LIKE '%".strtotime($filter['st_date'])."%' AND rm.ACTIVITY_END_DATE LIKE '%".strtotime($filter['ed_date'])."%' AND a.ACTIVITY_TYPE LIKE '%".$filter['ACTIVITY_TYPE']."%' LIMIT ".$offset.", 2";
     $Res = $mysqli->query($query);
     if($Res->num_rows>0){
         return $Res;
@@ -52,7 +53,12 @@ function add_activity($mysqli,$activity_type_id,$data){
 }
 
 function add_activity_school_map($mysqli,$activity_type_id,$data,$config){
-    $query="INSERT into tbl_rj_activity_school_mapping (ACTIVITY_TYPE_ID,SCHOOL_ID,SCHOOL_YEAR_ID,AIRPAY_MERCHANT_ID,AIRPAY_USERNAME,AIRPAY_PASSWORD,AIRPAY_SECRET_KEY,ACTIVITY_CODE,ACTIVITY_START_DATE,ACTIVITY_END_DATE,CREATED_ON) VALUES ('".$activity_type_id."','".$config['school_details']['SCHOOL_ID']."','".$data['school_year_id']."','".$config['school_details']['AIRPAY_MERCHANT_ID']."','".$config['school_details']['AIRPAY_USERNAME']."','".$config['school_details']['AIRPAY_PASSWORD']."','".$config['school_details']['AIRPAY_SECRET_KEY']."','".$data['code']."','".strtotime($data['start_date'])."','".strtotime($data['end_date'])."','".time()."')";
+    if(isset($activity_type_id['pos_req'])){
+        $pos_required = 1;
+    }else{
+        $pos_required = 0;
+    }
+    $query="INSERT into tbl_rj_activity_school_mapping (ACTIVITY_TYPE_ID,SCHOOL_ID,SCHOOL_YEAR_ID,ACTIVITY_CODE,ACTIVITY_START_DATE,ACTIVITY_END_DATE,CREATED_ON,MEAL_OPTION,EMAIL_CC,EMAIL_CONTENT,SMS_CONTENT,POS_REQUIRED,POS_UNIQUE_ID) VALUES ('".$activity_type_id."','".$config['school_details']['SCHOOL_ID']."','".$data['school_year_id']."','".$data['code']."','".strtotime($data['start_date'])."','".strtotime($data['end_date'])."','".time()."','".$data['meal_show']."','".$data['email_cc']."','".$data['email_content']."','".$data['sms_content']."','".$pos_required."','".$data['pos_unique_id']."')";
     if($mysqli->query($query) == TRUE){
         $activity_type_school_mapping_id = $mysqli->insert_id;;
         return $activity_type_school_mapping_id;

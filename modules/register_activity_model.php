@@ -61,4 +61,46 @@ function get_activities($mysqli,$activity_id,$student_class){
         return false;    
     }
 }
+
+function get_airpay_details($mysqli,$activity_type_id){
+    $query = "SELECT * FROM tbl_rj_activity_school_mapping WHERE ACTIVITY_TYPE_ID='".$activity_type_id."'"; 
+    $Res = $mysqli->query($query);
+    $data_array = array();
+    if($Res->num_rows>0){
+        return $Res->fetch_assoc();
+    }else{
+        return false;    
+    }
+}
+
+function add_register_data($mysqli,$register_data,$school_id,$meal){
+    $query = "INSERT into tbl_rj_activity_reservation (STUDENT_ID,SCHOOL,AMOUNT,CHMOD,EMAIL,MOBILE,PAYMENT_STATUS,ACTIVITY_TYPE_ID,MEAL,CHARGES) VALUES ('".$register_data['student_id']."','".$school_id."','".$register_data['total_amount']."','".$register_data['payoption']."','".$register_data['email']."','".$register_data['mob_no']."','N','".$register_data['activity_type_id']."','".$meal."','".$register_data['charge']."')";
+        if($mysqli->query($query) === TRUE){
+            return $mysqli->insert_id;
+        }else{
+            return false;    
+        }
+}
+
+function add_register_data_map($mysqli,$activity_id,$register_id){
+    foreach($activity_id as $_k=>$_v){
+        $query = "INSERT into tbl_rj_activity_reservation_mapping (RESERVATION_ID,ACTIVITY_ID) VALUES ('".$register_id."','".$_v."')";
+            if($mysqli->query($query) === TRUE){
+                $inserted_id[] = $mysqli->insert_id;
+                continue;
+            }else{
+                return false;    
+            }
+        }
+    return true;
+}
+
+function transaction_status($mysqli,$transaction_details,$status){
+    $query = "UPDATE tbl_rj_activity_reservation set APTRANSACTIONID='".$transaction_details['APTRANSACTIONID']."', TRANSACTIONSTATUS='".$transaction_details['TRANSACTIONSTATUS']."', MESSAGE='".$transaction_details['MESSAGE']."', PAYMENT_STATUS='".$status."', CUSTOM_DATA='".$transaction_details['CUSTOMVAR']."', ap_SecureHash='".$transaction_details['ap_SecureHash']."' WHERE RESERVATION_ID='".$transaction_details['TRANSACTIONID']."'";
+    if($mysqli->query($query) === TRUE){
+        return true;
+    } else {
+        return false;
+    }
+}
 ?>
